@@ -66,11 +66,11 @@ void print_usage(int ex) {
           "Options:\n"
           "\t-s <host>     : the FTP server.\n"
           "\t-p <port>     : the FTP port (default: 21).\n"
-          "\t-U <user>     : FTP user (defulat: anonymous).\n"
+          "\t-U <user>     : FTP user (default: anonymous).\n"
           "\t-P <password> : FTP password (default: hello@world). \n"
           "\t-v            : show version information and quit.\n"
-          "\t-h            : show helo and quit.\n"
-          "\nPlease send bugs report/help to hypsurus@mail.ru\n"
+          "\t-h            : show help and quit.\n"
+          "\nPlease send bug reports/help to hypsurus@mail.ru\n"
           "License GPLv2: GNU GPL version 2 or later <http://gnu.org/licenses/gpl.html>.\n");
     exit(ex);
 }
@@ -116,7 +116,7 @@ void ftpmap_detect_version_by_banner(ftpmap_t *ftpmap) {
     printf("\t[INFO] Trying to detect FTP server by banner...\n");
 
     if (( fp = fopen("../db/ftp-versions-db", "r")) == NULL )
-        die(1, "Failed to open ftp-versions-db file, The file exists?");
+        die(1, "Failed to open ftp-versions-db file, does the file exist?");
 
     while (( fgets(vv, sizeof(vv), fp)) != NULL ) {
         strtok(vv, "\n");
@@ -152,11 +152,11 @@ int ftpmap_login(ftpmap_t *ftpmap) {
         ftpmap_reconnect(ftpmap, 0);
 
     if ( *ftpmap->answer == '2' ) {
-        printf("\t[+} FTP Anonymous login Allowed !\n");
+        printf("\t[+} FTP Anonymous login allowed !\n");
         return 0;
     }
 
-    printf("\t[*] FTP Anonymous login NOT Allowed !\n");
+    printf("\t[*] FTP Anonymous login NOT allowed !\n");
     return -1;
 }
 
@@ -172,7 +172,7 @@ void ftpmap_findexploit(ftpmap_t *ftpmap) {
     if (( fp = fopen("../db/ftp-exploit-db", "r")) == NULL )
         die(1, "Failed to open the ftp-exploit-db file.");
 
-    printf("\n\t[*] Searching explolits...\n");
+    printf("\n\t[*] Searching exploits...\n");
     while (( fgets(line, sizeof(line), fp)) != NULL ) {
         sscanf(line, "%d,%[^\n]s", &id, &exploit);
         if ( strcasestr(exploit, ftpmap->software) && strstr(exploit, ftpmap->sversion)) {
