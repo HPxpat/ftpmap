@@ -29,6 +29,12 @@ void ftpmap_init(ftpmap_t *ftpmap) {
     ftpmap->password = strdup(FTP_DEFAULT_PASSWORD);
 }
 
+void ftpmap_end(ftpmap_t *ftpmap, detect_t *detect, exploit_t *exploit) {
+    free(ftpmap);
+    free(detect);
+    free(exploit);
+}
+
 void die(int stat, char *format, ...) {
         va_list li;
         char m[MAX_STR];
@@ -41,10 +47,16 @@ void die(int stat, char *format, ...) {
             fprintf(stderr, "[ERROR] Oh No! %s\n", m);
             exit(EXIT_FAILURE);
         }
+}
 
-        if ( stat == 2 ) {
-            fprintf(stderr, "[Debug] %s\n", m);
-        }
+void ftpmap_draw(int ch, int times) {
+    int i = 0;
+
+    printf("\t+");
+    for ( i = 0; i <= times; i++ ) {
+        putchar(ch);
+    }
+    printf("+\n");
 }
 
 void * xmalloc(size_t size) {
@@ -76,7 +88,8 @@ void print_usage(int ex) {
 }
 
 void print_startup(ftpmap_t *ftpmap) {
-    printf("Starting FTP-Map %s - Scanning (%s:%s)...\n\n", VERSION, ftpmap->ip_addr, ftpmap->port);
+    /*printf("%s", ftpmap_ascii);*/
+    printf("\n\tStarting FTP-Map %s - Scanning (%s:%s)...\n\n", VERSION, ftpmap->ip_addr, ftpmap->port);
 }
 
 void sigalrm(int dummy) {
@@ -101,46 +114,44 @@ char * ftpmap_getanswer(ftpmap_t *ftpmap) {
         }
     }
     if (*answer == 0) {        
-        ftpmap_reconnect(ftpmap,0);
+        ftpmap_reconnect(ftpmap);
     }
 
     return answer;
 }
 
-void ftpmap_detect_version_by_banner(ftpmap_t *ftpmap) {
+void ftpmap_detect_version_by_banner(ftpmap_t *ftpmap, detect_t *detect) {
     FILE *fp;
-    char vv[MAX_STR];
     char v[MAX_STR];
-    
-    sprintf(v, "%s%s", ftpmap->software, ftpmap->sversion);
+
     printf("\t[INFO] Trying to detect FTP server by banner...\n");
 
     if (( fp = fopen("../db/ftp-versions-db", "r")) == NULL )
         die(1, "Failed to open ftp-versions-db file, does the file exist?");
 
-    while (( fgets(vv, sizeof(vv), fp)) != NULL ) {
-        strtok(vv, "\n");
-        if (strcasecmp(vv, v) == 0) {
-            printf("\t[*] Found FTP Version: %s\n", vv);
+    while (( fgets(v, sizeof(v), fp)) != NULL ) {
+        if ( !strcasecmp(v, detect->software) && !strcasecmp(v, detect->version) ) {
+            printf("\t[*] Found FTP Version: %s\n", v);
             break;
         }
     }
 }
 
-int ftpmap_login(ftpmap_t *ftpmap) {
-    char version[MAX_STR];
-
+int ftpmap_login(ftpmap_t *ftpmap, detect_t *detect) {
     print_startup(ftpmap);
+
     ftpmap->answer = ftpmap_getanswer(ftpmap);
     printf("\t[*] FTP Banner: %s", ftpmap->answer);
 
-    sscanf(ftpmap->answer, "220 %s %s", ftpmap->software, ftpmap->sversion);
+    sscanf(ftpmap->answer, "220 %s %s", detect->software, detect->version);
+
+    printf("\t[INFO] Trying to login with: %s:%s\n", ftpmap->user, ftpmap->password);
 
     fprintf(ftpmap->fid, "USER %s\x0a\x0d", ftpmap->user);
     ftpmap->answer = ftpmap_getanswer(ftpmap);
 
     if ( ftpmap->answer == 0 )
-        ftpmap_reconnect(ftpmap, 0);
+        ftpmap_reconnect(ftpmap);
 
     if ( *ftpmap->answer == '2' )
         return 0;
@@ -149,47 +160,59 @@ int ftpmap_login(ftpmap_t *ftpmap) {
     ftpmap->answer = ftpmap_getanswer(ftpmap);  
 
     if ( ftpmap->answer == 0 )
-        ftpmap_reconnect(ftpmap, 0);
+        ftpmap_reconnect(ftpmap);
 
     if ( *ftpmap->answer == '2' ) {
-        printf("\t[+} FTP Anonymous login allowed !\n");
+        printf("\t[+] FTP Login success !\n");
         return 0;
     }
 
-    printf("\t[*] FTP Anonymous login NOT allowed !\n");
+    printf("\t[INFO] FTP Login failed.\n");
     return -1;
 }
 
-void ftpmap_findexploit(ftpmap_t *ftpmap) {
+void ftpmap_findexploit(ftpmap_t *ftpmap, detect_t *detect, exploit_t *exploit) {
     FILE *fp;
-    int id = 0, exploit_counter = 0;
-    char exploit[MAX_STR];
-    char line[MAX_STR];
-    char fsoftware[MAX_STR], fsversion[MAX_STR];
+    char l[MAX_STR];
+    int cexploit = 0;
 
-    sscanf(ftpmap->fingerprint_software, "%s %s", &fsoftware, &fsversion);
+    sscanf(detect->fisoftware, "%s %s", &detect->fsoftware, &detect->fversion);
 
     if (( fp = fopen("../db/ftp-exploit-db", "r")) == NULL )
         die(1, "Failed to open the ftp-exploit-db file.");
 
     printf("\n\t[*] Searching exploits...\n");
-    while (( fgets(line, sizeof(line), fp)) != NULL ) {
-        sscanf(line, "%d,%[^\n]s", &id, &exploit);
-        if ( strcasestr(exploit, ftpmap->software) && strstr(exploit, ftpmap->sversion)) {
-            printf("\t[+] Exploit: %s\n"
-                    "\t[*] Download: http://exploit-db.com/download/%d\n", exploit, id);
-            exploit_counter++;
-        }
-        else if ( strcasestr(exploit, fsoftware) && strstr(exploit, fsversion)) {
-            printf("\t[+] Exploit: %s\n"
-                   "\t[*] Download: http://exploit-db.com/download/%d\n", exploit, id);
-            exploit_counter++;
 
+    while (( fgets(l, sizeof(l), fp)) != NULL ) {
+        sscanf(l, "%d,%[^\n]s", &exploit->id, &exploit->exploit);
+
+        /* First search exploits by banner */
+        if ( strstr(exploit->exploit, detect->software) && strstr(exploit->exploit, detect->version)) {
+            ftpmap_draw(0x2d, strlen(exploit->exploit)+7);
+            printf("\t| Exploit | %s |\n", exploit->exploit);
+            ftpmap_draw(0x2d, strlen(exploit->exploit));
+
+            ftpmap_draw(0x2d, 39);
+            printf("\t| Link | http://exploit-db.com/download/%d |\n\n", exploit->id);
+            ftpmap_draw(0x2d, 39);
+            cexploit++;
+        }
+        /* Second search exploit by fingerprint */
+        if ( strstr(detect->fsoftware, exploit->exploit) && strstr(detect->fversion, exploit->exploit)) {
+            printf("\t| %s |\n", exploit->exploit);
+            ftpmap_draw(0x2d, strlen(exploit->exploit)+7);
+
+            ftpmap_draw(0x2d, 39);
+            printf("\t| http://exploit-db.com/download/%d |\n\n", exploit->id);
+            ftpmap_draw(0x2d, 39);
+            
+            cexploit++;
         }
     }
 
-    if ( exploit_counter == 0 )
-        printf("\t[INFO] FTP-Map didn't find any exploits in exploit-db.com\n");
+    if ( cexploit == 0 )
+        printf("\t[INFO] FTP-Map didn't find any exploits for %s %s\n", detect->software ? detect->software : detect->fsoftware, 
+                detect->version ? detect->version : detect->fversion);
 }
 
 int ftpmap_updatestats(const unsigned long sum, int testnb) {
@@ -296,7 +319,7 @@ int ftpmap_compar(const void *a_, const void *b_) {
     return strcasecmp(b->software, a->software);
 }
 
-int ftpmap_findwinner(ftpmap_t *ftpmap) {
+int ftpmap_findwinner(ftpmap_t *ftpmap, detect_t *detect) {
     FP *f = fingerprints;
     int nb = sizeof fingerprints / sizeof fingerprints[0];
     int nrep = 0;
@@ -315,7 +338,7 @@ int ftpmap_findwinner(ftpmap_t *ftpmap) {
             nrep++;            
         }
         if ( nrep == 1 )
-            sprintf(ftpmap->fingerprint_software, "%s", f->software);
+            sprintf(detect->fisoftware, "%s", f->software);
         if (nrep > 2) {
             break;
         }
@@ -340,9 +363,7 @@ int ftpmap_fingerprint(ftpmap_t *ftpmap) {
     char *answer = NULL;
     const char **cmd;
     unsigned long sum;
-    int testnb = 0;
-    int progress = 0;
-    int max = 0;
+    int testnb = 0, progress = 0, max = 0;
     FILE *fp;
     char filename[MAX_STR];
 
@@ -381,7 +402,7 @@ int ftpmap_fingerprint(ftpmap_t *ftpmap) {
     return 0;
 }
 
-void ftpmap_reconnect(ftpmap_t *ftpmap, int login) {
+void ftpmap_reconnect(ftpmap_t *ftpmap) {
     struct addrinfo ai, *srv = NULL, *p = NULL;
     struct sockaddr_in c;
     char hbuf[MAX_STR];
@@ -412,16 +433,14 @@ void ftpmap_reconnect(ftpmap_t *ftpmap, int login) {
 
 
     ftpmap->fid = fdopen(fd, "r+");
-    ;
-    if ( login )
-        ftpmap_login(ftpmap);
-
     freeaddrinfo(srv);
 }
 
 int main(int argc, char **argv) {
     int opt = 0;
     ftpmap_t *ftpmap = xmalloc(sizeof (*ftpmap));
+    detect_t *detect = xmalloc(sizeof (*detect));
+    exploit_t *exploit = xmalloc(sizeof (*exploit));
 
     ftpmap_init(ftpmap);
     while (( opt = getopt(argc, argv, "s:p:U:P:hv")) != -1 ) {
@@ -450,16 +469,18 @@ int main(int argc, char **argv) {
         print_usage(1);
     }
 
-    ftpmap_reconnect(ftpmap, 1);
-    ftpmap_detect_version_by_banner(ftpmap);
+    ftpmap_reconnect(ftpmap);
+    ftpmap_login(ftpmap, detect);
+    ftpmap_detect_version_by_banner(ftpmap,detect);
     ftpmap_fingerprint(ftpmap);
-    ftpmap_findwinner(ftpmap);
+    ftpmap_findwinner(ftpmap,detect);
     ftpmap_findseq(ftpmap);
-    ftpmap_findexploit(ftpmap);
+    ftpmap_findexploit(ftpmap,detect,exploit);
 
     printf("\nPlease send the fingerprint to hypsurus@mail.ru to improve FTP-Map.\n");
     fclose(ftpmap->fid);
-    free(ftpmap);
+
+    ftpmap_end(ftpmap, detect, exploit);
     
     return 0;
 }

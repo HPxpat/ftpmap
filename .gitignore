@@ -2,6 +2,9 @@
 
 /autom4te.cache
 
+# Fingerprints files.
+*.log
+
 # Object files
 *.o
 *.ko

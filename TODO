@@ -1,0 +1,7 @@
+ TODO
+---------
+
+* add bruteforce function for weak passwords. (with threads).
+* run exploit on the server if exist.
+* cleanup.
+
