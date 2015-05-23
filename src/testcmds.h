@@ -174,3 +174,4 @@ static const char *testcmds[] = {
         NULL
 };
 
+static const char *long_output_cmds[] = {"HELP"};

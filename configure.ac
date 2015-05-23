@@ -1,7 +1,7 @@
 AC_PREREQ(2.50)
-AC_INIT
+AC_INIT([ftpmap], [0.5], [hypsurus@mail.ru])
 AC_CONFIG_SRCDIR(src/ftpmap.c)
-AM_INIT_AUTOMAKE(ftpmap, 0.5)
+AM_INIT_AUTOMAKE
 
 AC_SUBST(VERSION)
 

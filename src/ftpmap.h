@@ -21,7 +21,7 @@
 #define FTP_DEFAULT_SERVER  "localhost"
 #define FTP_DEFAULT_PORT    "21"
 #define FTP_DEFAULT_USER    "Anonymous"
-#define FTP_DEFAULT_PASSWORD    "hello@world"
+#define FTP_DEFAULT_PASSWORD    "hello@"
 
 const char ftpmap_ascii[] = 
 "\x0a"
@@ -43,6 +43,8 @@ typedef struct {
     char *port;
     char *user;
     char *password;
+    char *cmd;
+    int skip_fingerprint;
  } ftpmap_t;
 
 typedef struct {

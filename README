@@ -26,6 +26,15 @@ make install
 
 Using ftpmap is trivial, and the built-in help is self-explanatory :
 
+Options:
+        -s <host>     - the FTP server.
+        -P <port>     - the FTP port (default: 21).
+        -u <user>     - FTP user (default: anonymous).
+        -u <password> - FTP password (default: NULL). 
+        -x <cmd>      - run command on the FTP server.
+        -v            - show version information and quit.
+        -h            - show help and quit.
+
 
 Examples :
 
@@ -33,8 +42,9 @@ ftpmap -s ftp.c9x.org
 
 ftpmap -P 2121 -s 127.0.0.1
 
-ftpmap -u joe -p joepass -s ftp3.c9x.org
+ftpmap -u joe -p joepass -s fto.server
 
+ftpmap -u joe -p joepass -s ftp.server -x "SYST"
 
 If a named host has several IP addresses, they are all sequentially scanned.
 During the scan, ftpmap displays a list of numbers : this is the
@@ -78,6 +88,8 @@ up to date : subscribe to mailing lists and apply vendor patches.
 
         -------------------- Notes ----------------------------
 
-All of this Document Written by Frank DENIS <j@pureftpd.org>. The Original Author of FTP-map.
+All of this Document Written by Frank DENIS <j@pureftpd.org>. 
+
+The original author of FTP-Map.
+
 FTP-Map Maintainer: Hypsurus <hypsurus@mail.ru.
-You can see the diff 0.4-0.5 be Review in github.
