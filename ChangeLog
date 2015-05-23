@@ -12,4 +12,7 @@
 	Anonymous login check.
 	Add vulnerables check.
 	search for exploit in exploit-db.com.
-	Code started from scratch with some code from ftpmap-0.4.
+* Version 0.6 :
+    new ASCII table for displaying exploits.
+    -x option to execute commands on the server.
+    Better Interface.

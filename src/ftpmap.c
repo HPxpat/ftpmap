@@ -71,11 +71,17 @@ void * xmalloc(size_t size) {
     return ret;
 }
 
-void print_version(int ex) {
-    printf("FTP-Map %s\n", VERSION);
-    exit(ex);
-}
+void print_version(int c) {
+        printf("Copyright FTP-Map %s (c) 2015 FTP-Map developers.\n"
+                "\n-=[ Compiled in: %s %s\n"
+                "-=[ Bug reports/help to: hypsurus@mail.ru\n"
+                "%s",
+                VERSION, 
+                __DATE__, __TIME__, 
+                ftpmap_ascii);
 
+        exit(c);
+}
 void print_usage(int ex) {
     printf("Usage: ftpmap -s [host] [OPTIONS]...\n\n"
           "Options:\n"
@@ -214,21 +220,28 @@ void ftpmap_findexploit(ftpmap_t *ftpmap, detect_t *detect, exploit_t *exploit) 
     if (( fp = fopen("../db/ftp-exploit-db", "r")) == NULL )
         die(1, "Failed to open the ftp-exploit-db file.");
 
-    printf("\n[*] Searching exploits...\n");
-
+    printf("\n[*] Searching exploits...\n\n");
     while (( fgets(l, sizeof(l), fp)) != NULL ) {
         sscanf(l, "%d,%[^\n]s", &exploit->id, &exploit->exploit);
-
+        
         /* First search exploits by banner */
         if ( strstr(exploit->exploit, detect->software) && strstr(exploit->exploit, detect->version)) {
-            printf("[+] Exploit: %s\n", exploit->exploit);
-            printf("[*] Link: http://exploit-db.com/download/%d |\n\n", exploit->id);
+            ftpmap_draw(0x2d, strlen(exploit->exploit));
+            printf("\t|%8s|\n", exploit->exploit);
+            ftpmap_draw(0x2d, strlen(exploit->exploit));
+            printf("\t|http://exploit-db.com/download/%d|\n", exploit->id); 
+            ftpmap_draw(0x2d, 35);
+            putchar(0x0a);
             cexploit++;
         }
         /* Second search exploit by fingerprint */
-        if ( strstr(exploit->exploit,detect->fsoftware) && strstr(exploit->exploit,detect->fversion)) {
-            printf("[+] Exploit: %s\n", exploit->exploit);
-            printf("[*] Link: http://exploit-db.com/download/%d |\n\n", exploit->id);
+        if ( strstr(exploit->exploit,detect->fsoftware) && strstr(exploit->exploit,detect->fversion)) { 
+            ftpmap_draw(0x2d, strlen(exploit->exploit));
+            printf("\t|%8s|\n", exploit->exploit);
+            ftpmap_draw(0x2d, strlen(exploit->exploit));
+            printf("\t|http://exploit-db.com/download/%d|\n", exploit->id); 
+            ftpmap_draw(0x2d, 35);
+            putchar(0x0a);
             cexploit++;
         }
     }
