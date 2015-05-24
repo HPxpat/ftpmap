@@ -14,6 +14,8 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <ctype.h>
+#include <pthread.h>
+#include <semaphore.h>
 
 #define MAX_STR 256
 #define MAX_ANSWER  1024
@@ -21,7 +23,7 @@
 #define FTP_DEFAULT_SERVER  "localhost"
 #define FTP_DEFAULT_PORT    "21"
 #define FTP_DEFAULT_USER    "Anonymous"
-#define FTP_DEFAULT_PASSWORD    "hello@"
+#define FTP_DEFAULT_PASSWORD    "NULL"
 
 const char ftpmap_ascii[] = 
 "\x0a"
@@ -44,7 +46,11 @@ typedef struct {
     char *user;
     char *password;
     char *cmd;
-    int skip_fingerprint;
+    char *passwords;
+    int SkipFingerprint;
+    int Fuzzer;
+    int FuzzerBufferLength;
+    int FuzzerLoginFirst;
  } ftpmap_t;
 
 typedef struct {
@@ -62,7 +68,7 @@ typedef struct {
 
 void ftpmap_detect_version_by_banner(ftpmap_t*,detect_t*);
 void ftpmap_init(ftpmap_t*);
-void ftpmap_reconnect(ftpmap_t*);
+int ftpmap_reconnect(ftpmap_t*,int);
 void print_usage(int);
 void print_version(int);
 void sigalrm(int);
