@@ -16,8 +16,7 @@ software/version.
 
 ./configure
 make
-make install
-
+cd src && ./ftpmap -h
 
            ------------------------ USAGE ------------------------
 
@@ -25,24 +24,35 @@ make install
 Using ftpmap is trivial, and the built-in help is self-explanatory :
 
 Options:
-        -s <host>     - the FTP server.
-        -P <port>     - the FTP port (default: 21).
-        -u <user>     - FTP user (default: anonymous).
-        -u <password> - FTP password (default: NULL). 
-        -x <cmd>      - run command on the FTP server.
-        -v            - show version information and quit.
-        -h            - show help and quit.
+	-s <host>     - the FTP server.
+	-P <port>     - the FTP port (default: 21).
+	-u <user>     - FTP user (default: anonymous).
+	-u <password> - FTP password (default: NULL). 
+	-x <cmd>      - run command on the FTP server.
+	-n            - do not generate fingerprint.
+
+Fuzzer Options:
+	-f            - Use the Fuzzer.
+	-b            - buffer length to send. (default: 256)
+	-l            - do not login.
+
+General Options:
+	-v            - show version information and quit.
+	-h            - show help and quit.
 
 
 Examples :
 
-ftpmap -s ftp.c9x.org
+ftpmap -s ftp.server
 
 ftpmap -P 2121 -s 127.0.0.1
 
 ftpmap -u joe -p joepass -s fto.server
 
 ftpmap -u joe -p joepass -s ftp.server -x "SYST"
+
+ftpmap -s ftp.server -f 
+
 
 If a named host has several IP addresses, they are all sequentially scanned.
 During the scan, ftpmap displays a list of numbers : this is the
@@ -82,12 +92,6 @@ up to date : subscribe to mailing lists and apply vendor patches.
 
                 git clone git://github.com/Hypsurus/ftpmap 
 
-
-
-        -------------------- Notes ----------------------------
-
-All of this Document Written by Frank DENIS <j@pureftpd.org>. 
-
-The original author of FTP-Map.
-
-FTP-Map Maintainer: Hypsurus <hypsurus@mail.ru.
+    ------------------------ The end ------------------------
+        Copyright 2015 (C) FTP-Map project developers.
+License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.
