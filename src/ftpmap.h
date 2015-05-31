@@ -14,16 +14,18 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <ctype.h>
-#include <pthread.h>
-#include <semaphore.h>
+#include "../config.h"
 
 #define MAX_STR 256
 #define MAX_ANSWER  1024
-#define FTP_CRLF    "\x0a\x0d"
 #define FTP_DEFAULT_SERVER  "localhost"
 #define FTP_DEFAULT_PORT    "21"
 #define FTP_DEFAULT_USER    "Anonymous"
 #define FTP_DEFAULT_PASSWORD    "NULL"
+
+/* Databases */
+#define DB_EXPLOITDB    "/usr/local/share/ftpmap/db/ftp-exploit-db"
+#define DB_VERSIONS    "/usr/local/share/ftpmap/db/ftp-versions-db"
 
 const char ftpmap_ascii[] = 
 "\x0a"
