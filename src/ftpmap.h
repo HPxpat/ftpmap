@@ -49,6 +49,8 @@ typedef struct {
     char *password;
     char *cmd;
     char *passwords;
+    int VersionDetected;
+    int FingerprintHasMatch;
     int SkipFingerprint;
     int Fuzzer;
     int FuzzerBufferLength;
