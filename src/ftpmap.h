@@ -1,6 +1,9 @@
 
 /* ftpmap.h - the FTP-Map project header */
 
+#ifndef FTPMAP_H
+#define FTPMAP_H
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <getopt.h>
@@ -14,33 +17,23 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <ctype.h>
-#include "../config.h"
 
 #define MAX_STR 256
 #define MAX_ANSWER  1024
 #define FTP_DEFAULT_SERVER  "localhost"
 #define FTP_DEFAULT_PORT    "21"
-#define FTP_DEFAULT_USER    "Anonymous"
+#define FTP_DEFAULT_USER    "anonymous"
 #define FTP_DEFAULT_PASSWORD    "NULL"
 
 /* Databases */
-#define DB_EXPLOITDB    "/usr/local/share/ftpmap/db/ftp-exploit-db"
-#define DB_VERSIONS    "/usr/local/share/ftpmap/db/ftp-versions-db"
-
-const char ftpmap_ascii[] = 
-"\x0a"
-"\t███████╗████████╗██████╗ ███╗   ███╗ █████╗ ██████╗ \n"
-"\t██╔════╝╚══██╔══╝██╔══██╗████╗ ████║██╔══██╗██╔══██╗\n"
-"\t█████╗     ██║   ██████╔╝██╔████╔██║███████║██████╔╝\n"
-"\t██╔══╝     ██║   ██╔═══╝ ██║╚██╔╝██║██╔══██║██╔═══╝ \n"
-"\t██║        ██║   ██║     ██║ ╚═╝ ██║██║  ██║██║     \n"
-"\t╚═╝        ╚═╝   ╚═╝     ╚═╝     ╚═╝╚═╝  ╚═╝╚═╝     \n"
-"                     FTP Scanner.                     \n";
+#define DB_EXPLOITDB    "../db/ftp-exploit-db"
+#define DB_VERSIONS    "../db/ftp-versions-db"
 
 int fd;
 
 typedef struct {
     FILE *fid;
+    FILE *loggerfp;
     char ip_addr[MAX_STR];
     char *answer;
     char *server;
@@ -49,12 +42,17 @@ typedef struct {
     char *password;
     char *cmd;
     char *passwords;
-    int VersionDetected;
-    int FingerprintHasMatch;
-    int SkipFingerprint;
-    int Fuzzer;
-    int FuzzerBufferLength;
-    int FuzzerLoginFirst;
+    char *loggerfile;
+    /* Flags */
+    int versiondetected;
+    int fingerprinthasmatch;
+    int skipfingerprint;
+    int forcefingerprint;
+    int loginonly;
+    int fuzzer;
+    int fuzzerbufferlength;
+    int fuzzerloginfirst;
+    unsigned int fuzzerchar;
  } ftpmap_t;
 
 typedef struct {
@@ -72,7 +70,8 @@ typedef struct {
 
 void ftpmap_detect_version_by_banner(ftpmap_t*,detect_t*);
 void ftpmap_init(ftpmap_t*);
-int ftpmap_reconnect(ftpmap_t*,int);
 void print_usage(int);
 void print_version(int);
 void sigalrm(int);
+
+#endif /*FTPMAP_H*/

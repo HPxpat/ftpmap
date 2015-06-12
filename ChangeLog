@@ -16,3 +16,15 @@
     new ASCII table for displaying exploits.
     -x option to execute commands on the server.
     Better Interface.
+* Version 0.7:
+    -b Flag fixes
+    Bug fixes.
+    Replacing Makefile to lighter Makefile.
+
+* Version 0.8:
+    Add logger.h
+    Recovering the Old Makefile.
+    Split functions to tcp.c, misc.c files.
+    -A options (login only)., -F, -o and more.
+
+

@@ -21,3 +21,9 @@
 
 - Version 0.6 :
     Major bug fixes.
+
+- Version 0.7:
+    Fixes for the -b = bug.
+
+- Version 0.8:
+    Back to the old Makefile.

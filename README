@@ -7,7 +7,7 @@
 Ftpmap scans remote FTP servers to indentify what software and what versions
 they are running. It uses program-specific fingerprints to discover the name
 of the software even when banners have been changed or removed, or when some
-features have been disabled. Also FTP-Map can detect Vulnerables by the  FTP 
+features have been disabled. also FTP-Map can detect Vulnerables by the  FTP 
 software/version.
 
 
@@ -17,7 +17,6 @@ software/version.
 ./configure
 make
 cd src && ./ftpmap -h
-sudo make install
 
            ------------------------ USAGE ------------------------
 
