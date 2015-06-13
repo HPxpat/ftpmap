@@ -27,4 +27,9 @@
     Split functions to tcp.c, misc.c files.
     -A options (login only)., -F, -o and more.
 
-
+* Version 0.9:
+    Add FTP data tunnel.
+    ftpmap_calc_data_port()
+    ftpmap_getlist()
+    ftpmap_mdtm()
+    ftpmap_delete()

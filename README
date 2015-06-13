@@ -7,12 +7,12 @@
 Ftpmap scans remote FTP servers to indentify what software and what versions
 they are running. It uses program-specific fingerprints to discover the name
 of the software even when banners have been changed or removed, or when some
-features have been disabled. also FTP-Map can detect Vulnerables by the  FTP 
-software/version.
-
+features have been disabled. FTP-Map will try to detect exploits by the  
+FTP software/version. and FTP-Map also contains tools for remote take-over.
 
         ------------------------ COMPILATION ------------------------
 
+		 "make install will not work for now."
 
 ./configure
 make
@@ -23,42 +23,51 @@ cd src && ./ftpmap -h
 
 Using ftpmap is trivial, and the built-in help is self-explanatory :
 
+
 Options:
-	-s <host>     - the FTP server.
-	-P <port>     - the FTP port (default: 21).
-	-u <user>     - FTP user (default: anonymous).
-	-u <password> - FTP password (default: NULL). 
-	-x <cmd>      - run command on the FTP server.
-	-n            - do not generate fingerprint.
+	--server, -s <host>        - The FTP server.
+	--port, -P <port>          - The FTP port (default: 21).
+	--user, -u <user>          - FTP user (default: anonymous).
+	--password, -p <password>  - FTP password (default: NULL). 
+	--execute, -x <cmd>        - Run command on the FTP server.
+	--nofingerprint, -n        - Do not generate fingerprint.
+	--login, -A                - Only login, print output and quit.
+	--force, -F                - Force to generate fingerprint.
+	--output, -o <file>        - output file.
+	--list, -L <path>          - Get list of files and folders on the FTP server.
+	--delete <path>            - Delete files/folders on the server.
+	--last-modified, -m <file> - Returns the last-modified time of the given file
+
 
 Fuzzer Options:
-	-f            - Use the Fuzzer.
-	-b            - buffer length to send. (default: 256)
-	-l            - do not login.
+	--fuzzer, -f               - Use the Fuzzer.
+	--fuzzerlength,-b <length> - Buffer length to send. (default: 256)
+	--fuzzer-nologin, -l       - Do not login.
+
 
 General Options:
-	-v            - show version information and quit.
-	-h            - show help and quit.
+	--version, -v              - Show version information and quit.
+	--help, -h                 - Show help and quit.
 
 
 Examples :
 
-ftpmap -s ftp.server
+ftpmap --server localhost 
 
-ftpmap -P 2121 -s 127.0.0.1
+ftpmap --port 2121 -s 127.0.0.1
 
-ftpmap -u joe -p joepass -s fto.server
+ftpmap -u root -p root -s localhost
 
-ftpmap -u joe -p joepass -s ftp.server -x "SYST"
+ftpmap -u root -p root -s localhost -x "SYST"
 
-ftpmap -s ftp.server -f 
+ftpmap -s localhost --fuzzer 
+
+ftpmap --server localhost --user root --password root --list "/"
+
+ftpmap --server -u root -p root --delete "/etc/secret"
 
 
-If a named host has several IP addresses, they are all sequentially scanned.
-During the scan, ftpmap displays a list of numbers : this is the
-"fingerprint" of the server. If the server software isn't properly
-recognized, and you know what it is, please send the fingerprint and the
-name of the software to hypsurus@mail.ru.
+please send the fingerprint and the name of the software to hypsurus@mail.ru.
 
 Another indication that can be displayed if login was successful is the FTP
 PORT sequence prediction. If the difficulty is too low, it means that anyone
@@ -93,5 +102,6 @@ up to date : subscribe to mailing lists and apply vendor patches.
                 git clone git://github.com/Hypsurus/ftpmap 
 
     ------------------------ The end ------------------------
+
         Copyright 2015 (C) FTP-Map project developers.
 License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.

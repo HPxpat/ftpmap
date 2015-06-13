@@ -46,4 +46,21 @@ int ftpmap_reconnect(ftpmap_t *ftpmap, int ex) {
     return 1;
 }
 
+FILE * ftpmap_data_tunnel(ftpmap_t *ftpmap) {
+    FILE *fid;
+    struct sockaddr_in s;
 
+    if (( dfd = socket(AF_INET, SOCK_STREAM, 0)) < 0 )
+        die(1, "data_tunnel: Failed to create socket.");
+
+    ftpmap_calc_data_port(ftpmap); 
+    /* s.sin_family = AF_UNSPEC */
+    s.sin_family = AF_INET;
+    s.sin_port = htons(ftpmap->dataport);
+    s.sin_addr.s_addr = inet_addr(ftpmap->ip_addr);
+
+    if (( connect(dfd, (struct sockaddr *)&s, sizeof s)) < 0 )
+        die(1, "data_tunnel: Failed to connect.");
+
+    return (fdopen(dfd, "r"));
+}

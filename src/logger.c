@@ -5,7 +5,7 @@
 
 void logger_open(ftpmap_t *ftpmap) {
     char filename[MAX_STR];
-    sprintf(filename, "%s.__log", ftpmap->server);
+    sprintf(filename, "%s.log", ftpmap->server);
 
     if ( ftpmap->loggerfile == NULL )
         ftpmap->loggerfile = strdup(filename);

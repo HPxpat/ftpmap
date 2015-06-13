@@ -31,11 +31,10 @@ void ftpmap_init(ftpmap_t *ftpmap) {
     ftpmap->password = strdup(FTP_DEFAULT_PASSWORD);
     ftpmap->fuzzerbufferlength = 256;
     ftpmap->fuzzerloginfirst = 1;
-    ftpmap->fuzzerchar = 'A';
 }
 
 void ftpmap_end(ftpmap_t *ftpmap, detect_t *detect, exploit_t *exploit) {
-    fprintf(ftpmap->fid, "BYE\r\n");
+    fprintf(ftpmap->fid, "QUIT\r\n");
     fclose(ftpmap->fid); 
     printf("\n.:: Scan for: %s complete ::.\n", ftpmap->ip_addr);
     logger_close(ftpmap);
@@ -56,23 +55,25 @@ void print_version(int c) {
 void print_usage(int ex) {
     printf("Usage: ftpmap -s [host] [OPTIONS]...\n\n"
           "Options:\n"
-          "\t-s <host>     - The FTP server.\n"
-          "\t-P <port>     - The FTP port (default: 21).\n"
-          "\t-u <user>     - FTP user (default: anonymous).\n"
-          "\t-u <password> - FTP password (default: NULL). \n"
-          "\t-x <cmd>      - Run command on the FTP server.\n"
-          "\t-n            - Do not generate fingerprint.\n"
-          "\t-A            - Only login, print output and quit.\n"
-          "\t-F            - Force to generate fingerprint.\n"
-          "\t-o <file>     - output file.\n"
-          "\nFuzzer Options:\n"
-          "\t-f            - Use the Fuzzer.\n"
-          "\t-b            - Buffer length to send. (default: 256)\n"
-          "\t-l            - Do not login.\n"
-          "\t-C            - Fuzzer (default 0x41)\n"
-         "\nGeneral Options:\n"
-          "\t-v            - Show version information and quit.\n"
-          "\t-h            - Show help and quit.\n"
+          "\t--server, -s <host>        - The FTP server.\n"
+          "\t--port, -P <port>          - The FTP port (default: 21).\n"
+          "\t--user, -u <user>          - FTP user (default: anonymous).\n"
+          "\t--password, -p <password>  - FTP password (default: NULL). \n"
+          "\t--execute, -x <cmd>        - Run command on the FTP server.\n"
+          "\t--nofingerprint, -n        - Do not generate fingerprint.\n"
+          "\t--login, -A                - Only login, print output and quit.\n"
+          "\t--force, -F                - Force to generate fingerprint.\n"
+          "\t--output, -o <file>        - output file.\n"
+          "\t--list, -L <path>          - Get list of files and folders on the FTP server.\n"
+          "\t--delete <path>            - Delete files/folders on the server.\n"
+          "\t--last-modified, -m <file> - Returns the last-modified time of the given file\n"
+          "\n\nFuzzer Options:\n"
+          "\t--fuzzer, -f               - Use the Fuzzer.\n"
+          "\t--fuzzerlength,-b <length> - Buffer length to send. (default: 256)\n"
+          "\t--fuzzer-nologin, -l       - Do not login.\n"
+         "\n\nGeneral Options:\n"
+          "\t--version, -v              - Show version information and quit.\n"
+          "\t--help, -h                 - Show help and quit.\n"
           "\nPlease send bug reports/help to hypsurus@mail.ru\n"
           "License GPLv2: GNU GPL version 2 or later <http://gnu.org/licenses/gpl.html>.\n");
     exit(ex);
@@ -88,7 +89,7 @@ char * ftpmap_getanswer(ftpmap_t *ftpmap) {
     char *s = NULL;    
 
     *answer = 0;
-
+ 
     signal(SIGALRM, sigalrm);
     alarm(5);
     while (fgets(answer, sizeof answer, ftpmap->fid) != NULL) {
@@ -152,7 +153,7 @@ int ftpmap_login(ftpmap_t *ftpmap, detect_t *detect, int v) {
     ftpmap->answer = ftpmap_getanswer(ftpmap);
 
     if ( v )
-        logger_write(ftpmap,"::: FTP Banner: %s", ftpmap->answer);
+        logger_write(ftpmap,":: FTP Banner: %s", ftpmap->answer);
 
     sscanf(ftpmap->answer, "220 %s %s", detect->software, detect->version);
 
@@ -176,12 +177,12 @@ int ftpmap_login(ftpmap_t *ftpmap, detect_t *detect, int v) {
 
     if ( *ftpmap->answer == '2' ) {
         if ( v )
-            logger_write(ftpmap,"::: %s", ftpmap->answer);
+            logger_write(ftpmap,":: %s", ftpmap->answer);
         return 0;
     }
 
     if ( v )
-        printf(":: %s", ftpmap->answer);
+        logger_write(ftpmap,":: %s", ftpmap->answer);
     return -1;
 }
 
@@ -297,7 +298,7 @@ int ftpmap_findseq(ftpmap_t *ftpmap) {
     logger_write(ftpmap,":: FTP port sequence numbers : \n");
     n = 0;
     do {
-        printf("%u ", port[n]);
+        logger_write(ftpmap,":: PORT: %u \n", port[n]);
         if (n != 0) {
             portdif = (long) port[n] - (long) port[n - 1];
             if (portdif < 0L) {
@@ -343,7 +344,7 @@ int ftpmap_findwinner(ftpmap_t *ftpmap, detect_t *detect) {
     double max,maxerr;
     const char *olds = NULL;
 
-    printf(":: This may be running :\n\n");
+    logger_write(ftpmap,":: This may be running :\n\n");
     qsort(fingerprints, sizeof fingerprints / sizeof fingerprints[0],
           sizeof fingerprints[0], ftpmap_compar);
     maxerr = (double) fingerprints[nb - 1].err;
@@ -353,7 +354,7 @@ int ftpmap_findwinner(ftpmap_t *ftpmap, detect_t *detect) {
         if (olds == NULL || strcasecmp(olds, f->software) != 0) {
             olds = f->software;
             ftpmap_draw(0x2d, 30);
-            printf("%d) %s - %.2g%%\n", nrep+1, f->software, max);
+            logger_write(ftpmap,"%d) %s - %.2g%%\n", nrep+1, f->software, max);
             nrep++;            
         }
         if ( nrep == 1 )
@@ -393,7 +394,7 @@ int ftpmap_fingerprint(ftpmap_t *ftpmap, detect_t *detect) {
     if (( fp = fopen(filename, "w+")) == NULL )
         die(1, "Failed to write fingerprint log file.");
 
-    printf(":: Trying to detect FTP server by fingerprint...\n");
+    logger_write(ftpmap,":: Trying to detect FTP server by fingerprint...\n");
     cmd = testcmds;
     max = 141;
 
@@ -418,7 +419,7 @@ int ftpmap_fingerprint(ftpmap_t *ftpmap, detect_t *detect) {
         progress++;
     }
     fprintf(fp, "\n\t}\n},");
-    printf(":: Fingerprint saved: %s\n", filename);
+    logger_write(ftpmap,":: Fingerprint saved: %s\n", filename);
     fclose(fp);
     putchar(0x0a);
     return 0;
@@ -429,12 +430,12 @@ void ftpmap_sendcmd(ftpmap_t *ftpmap) {
     const char **lptr = NULL;
     int shorto = 1;
 
-    printf(":: Sending cmd: %s.\n", ftpmap->cmd);
+    logger_write(ftpmap,":: Sending cmd: %s.\n", ftpmap->cmd);
     fprintf(ftpmap->fid, "%s\r\n", ftpmap->cmd);
 
     for ( lptr = long_output_cmds; *lptr; lptr++ ) {
         if ( strcasecmp(*lptr, ftpmap->cmd) == 0 ) {
-           printf("::: Retrieving data for %s...\n\n", ftpmap->cmd);
+           logger_write(ftpmap,"::: Retrieving data for %s...\n\n", ftpmap->cmd);
             answer = ftpmap_getanswer_long(ftpmap);
             shorto = 0;
             break;
@@ -443,7 +444,7 @@ void ftpmap_sendcmd(ftpmap_t *ftpmap) {
     }
     if ( shorto )
         answer = ftpmap_getanswer(ftpmap);
-    printf("%s", answer);
+    logger_write(ftpmap,"%s", answer);
 }
 
 void ftpmap_fuzz(ftpmap_t *ftpmap, detect_t *detect) {
@@ -454,14 +455,14 @@ void ftpmap_fuzz(ftpmap_t *ftpmap, detect_t *detect) {
 
     if ( ftpmap->fuzzerloginfirst )
         ftpmap_login(ftpmap, detect, 0);
-    ftpmap_genchars(ftpmap->fuzzerchar, buffer, ftpmap->fuzzerbufferlength);
+    ftpmap_genchars(0x41, buffer, ftpmap->fuzzerbufferlength);
 
-    printf(":: Starting the fuzzer on: %s\n", ftpmap->ip_addr);
+    logger_write(ftpmap,":: Starting the fuzzer on: %s\n", ftpmap->ip_addr);
     for ( ptr = testcmds; *ptr; ptr++ ) {
-        printf(":: Fuzzing the target => %s+%d * %d (%d%%)\n",  *ptr, ftpmap->fuzzerchar, ftpmap->fuzzerbufferlength, progress * 100 / max);
+        logger_write(ftpmap,":: Fuzzing the target => %s+0x41 * %d (%d%%)\n",  *ptr, ftpmap->fuzzerbufferlength, progress * 100 / max);
         if ((ftpmap_reconnect(ftpmap,0) == -1 )) {
                 stop:
-                    printf("\n:: Connection Error: \n=> CMD: %s\n=> Buffer Length: %d\n", *ptr, strlen(buffer));
+                    logger_write(ftpmap,"\n:: Connection Error: \n=> CMD: %s\n=> Buffer Length: %d\n", *ptr, strlen(buffer));
                     break;
         }
         answer = ftpmap_getanswer(ftpmap);
@@ -483,14 +484,97 @@ void ftpmap_fuzz(ftpmap_t *ftpmap, detect_t *detect) {
     fclose(ftpmap->fid);
 }
 
+void ftpmap_getlist(ftpmap_t *ftpmap) {
+    FILE *fid;
+    char buffer[MAX_STR];
+    char *answer = NULL;
+    
+    logger_write(ftpmap,":: Trying to receive LIST..\n\n");
+    fid = ftpmap_data_tunnel(ftpmap);
+    fprintf(ftpmap->fid, "LIST %s\r\n", ftpmap->listpath);
+    answer = ftpmap_getanswer(ftpmap);
+
+    signal(SIGALRM, sigalrm);
+    alarm(5);
+
+    while ( (fgets(buffer, sizeof(buffer), fid)) != NULL ) {
+        logger_write(ftpmap,"%s", buffer);
+    }
+    logger_write(ftpmap,":: End of output\n");
+}
+
+void ftpmap_delete(ftpmap_t *ftpmap) {
+    char *answer = NULL;
+
+    fprintf(ftpmap->fid, "DELE %s\r\n", ftpmap->deletepath);
+    answer = ftpmap_getanswer(ftpmap);
+    if ( *answer == 0 )
+        return;
+    logger_write(ftpmap,":: %s", answer);
+}
+
+void ftpmap_mdtm(ftpmap_t *ftpmap) {
+    char *answer = NULL;
+
+    fprintf(ftpmap->fid, "MDTM %s\r\n", ftpmap->mdtmpath);
+    answer = ftpmap_getanswer(ftpmap);
+    if ( *answer == 0 )
+        return;
+
+    logger_write(ftpmap,":: %s",answer);
+}
+
+void ftpmap_calc_data_port(ftpmap_t *ftpmap) {
+    char *answer = NULL, *actualstr = NULL;
+    char str[MAX_STR];
+    int h1 = 0, h2 = 0, h3 = 0, h4 = 0, p1 = 0, p2 = 0;
+
+    /* You must call this function after ftpmap_login() */
+    fprintf(ftpmap->fid, "PASV\r\n");
+    answer = ftpmap_getanswer(ftpmap);
+   
+    /* Not logged in or worng command*/
+    if ( *answer == '5' ) {
+        logger_write(ftpmap,"%s", answer);
+        return;
+    }
+    
+    sprintf(str, "%s", (actualstr = strstr(answer, "(")));
+    sscanf(str, " (%d,%d,%d,%d,%d,%d)", &h1,&h2,&h3,&h4,&p1,&p2);
+    /*h1.h2.h3.h4 - the server IP address*/
+    ftpmap->dataport = p1*256+p2;
+}
+
 int main(int argc, char **argv) {
-    int opt = 0;
+    int opt = 0, long_index = 0;
     ftpmap_t *ftpmap = xmalloc(sizeof (*ftpmap));
     detect_t *detect = xmalloc(sizeof (*detect));
     exploit_t *exploit = xmalloc(sizeof (*exploit));
 
     ftpmap_init(ftpmap);
-    while (( opt = getopt(argc, argv, "s:P:u:p:x:b:C:flhvnAo:F")) != -1 ) {
+
+    static struct option long_options[] = {
+        {"server", required_argument, 0, 's'},
+        {"port",   required_argument, 0, 'P'},
+        {"user",   required_argument, 0, 'u'},
+        {"password", required_argument, 0, 'p'},
+        {"execute", required_argument, 0, 'x'},
+        {"last-modified", required_argument, 0, 'm'},
+        {"fuzzer", no_argument, 0, 'f'},
+        {"fuzzerlength", required_argument, 0, 'b'},
+        {"fuzzer-nologin", no_argument, 0, 'l'},
+        {"login", no_argument, 0, 'A'},
+        {"force", no_argument, 0, 'F'},
+        {"output", required_argument, 0, 'o'},
+        {"nofingerprint", no_argument, 0, 'n'},
+        {"list", required_argument, 0, 'L'},
+        {"delete", required_argument, 0, 'D'},
+        {"help", no_argument, 0, 'h'},
+        {"version", no_argument, 0, 'v'},
+    };
+
+    while (( opt = getopt_long(argc, argv, "s:P:u:p:x:b:flhvnAo:FL:D:m:", 
+                    long_options, &long_index)) != -1 ) {
             switch(opt) {
                 case 's':
                         ftpmap->server = strdup(optarg);
@@ -519,9 +603,6 @@ int main(int argc, char **argv) {
                 case 'A':
                         ftpmap->loginonly = 1;
                         break;
-                case 'C':
-                        ftpmap->fuzzerchar = atoi(optarg);
-                        break;
                 case 'F':
                         ftpmap->forcefingerprint = 1;
                         break;
@@ -531,7 +612,16 @@ int main(int argc, char **argv) {
                 case 'n':
                         ftpmap->skipfingerprint = 1;
                         break;
-               case 'h':
+                case 'L':
+                        ftpmap->listpath = strdup(optarg);
+                        break;
+                case 'D':
+                        ftpmap->deletepath = strdup(optarg);
+                        break;
+                case 'm':
+                        ftpmap->mdtmpath = strdup(optarg);
+                        break;
+                case 'h':
                         print_usage(0);
                 case 'v':
                         print_version(0);
@@ -557,6 +647,22 @@ int main(int argc, char **argv) {
     }
 
     ftpmap_login(ftpmap, detect,1);
+    
+    if ( ftpmap->listpath ) {
+        ftpmap_getlist(ftpmap);
+        goto end;
+    }
+
+    if ( ftpmap->deletepath ) {
+        ftpmap_delete(ftpmap);
+        goto end;
+    }
+
+    if ( ftpmap->mdtmpath ) {
+        ftpmap_mdtm(ftpmap);
+        goto end;
+    }
+
     if ( ftpmap->loginonly )
         goto end;
 

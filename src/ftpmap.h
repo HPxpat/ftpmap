@@ -12,6 +12,7 @@
 #include <unistd.h>
 #include <time.h>
 #include <sys/socket.h>
+#include <sys/types.h>
 #include <signal.h>
 #include <netdb.h>
 #include <arpa/inet.h>
@@ -30,6 +31,7 @@
 #define DB_VERSIONS    "../db/ftp-versions-db"
 
 int fd;
+int dfd;
 
 typedef struct {
     FILE *fid;
@@ -43,6 +45,10 @@ typedef struct {
     char *cmd;
     char *passwords;
     char *loggerfile;
+    char *listpath;
+    char *deletepath;
+    char *mdtmpath;
+    int dataport;
     /* Flags */
     int versiondetected;
     int fingerprinthasmatch;
@@ -52,7 +58,6 @@ typedef struct {
     int fuzzer;
     int fuzzerbufferlength;
     int fuzzerloginfirst;
-    unsigned int fuzzerchar;
  } ftpmap_t;
 
 typedef struct {
@@ -68,10 +73,17 @@ typedef struct {
     int id;
 } exploit_t;
 
-void ftpmap_detect_version_by_banner(ftpmap_t*,detect_t*);
-void ftpmap_init(ftpmap_t*);
-void print_usage(int);
-void print_version(int);
-void sigalrm(int);
+void ftpmap_init(ftpmap_t *ftpmap);
+void ftpmap_end(ftpmap_t *ftpmap, detect_t *detect, exploit_t *exploit);
+void print_version(int c);
+void print_usage(int ex);
+void print_startup(ftpmap_t *ftpmap);
+void ftpmap_detect_version_by_banner(ftpmap_t *ftpmap, detect_t *detect);
+void ftpmap_findexploit(ftpmap_t *ftpmap, detect_t *detect, exploit_t *exploit);
+int ftpmap_compar(const void *a_, const void *b_);
+void ftpmap_sendcmd(ftpmap_t *ftpmap);
+void ftpmap_fuzz(ftpmap_t *ftpmap, detect_t *detect);
+void ftpmap_calc_data_port(ftpmap_t *ftpmap);
+char * ftpmap_getanswer(ftpmap_t*);
 
 #endif /*FTPMAP_H*/
