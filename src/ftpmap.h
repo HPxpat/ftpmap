@@ -49,6 +49,7 @@ typedef struct {
     char *deletepath;
     char *mdtmpath;
     int dataport;
+    int scan_mode;
     /* Flags */
     int versiondetected;
     int fingerprinthasmatch;

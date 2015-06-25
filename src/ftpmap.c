@@ -24,6 +24,7 @@
 #include "tcp.h"
 #include "misc.h"
 #include "logger.h"
+#include "client.h"
 
 void ftpmap_init(ftpmap_t *ftpmap) {
     ftpmap->port   = strdup(FTP_DEFAULT_PORT);
@@ -36,9 +37,11 @@ void ftpmap_init(ftpmap_t *ftpmap) {
 void ftpmap_end(ftpmap_t *ftpmap, detect_t *detect, exploit_t *exploit) {
     fprintf(ftpmap->fid, "QUIT\r\n");
     fclose(ftpmap->fid); 
-    printf("\n.:: Scan for: %s complete ::.\n", ftpmap->ip_addr);
+    if ( ftpmap->scan_mode ) {
+        printf("\n.:: Scan for: %s complete ::.\n", ftpmap->ip_addr);
+        printf("\n:!: Please send the fingerprint to hypsurus@mail.ru to improve FTP-Map.\n\n");  
+    }
     logger_close(ftpmap);
-    printf("\nPlease send the fingerprint to hypsurus@mail.ru to improve FTP-Map.\n"); 
     free(ftpmap);
     free(detect);
     free(exploit);
@@ -55,6 +58,7 @@ void print_version(int c) {
 void print_usage(int ex) {
     printf("Usage: ftpmap -s [host] [OPTIONS]...\n\n"
           "Options:\n"
+          "\t--scan, -S                 - Start FTP scan.\n"
           "\t--server, -s <host>        - The FTP server.\n"
           "\t--port, -P <port>          - The FTP port (default: 21).\n"
           "\t--user, -u <user>          - FTP user (default: anonymous).\n"
@@ -298,7 +302,7 @@ int ftpmap_findseq(ftpmap_t *ftpmap) {
     logger_write(ftpmap,":: FTP port sequence numbers : \n");
     n = 0;
     do {
-        logger_write(ftpmap,":: PORT: %u \n", port[n]);
+        logger_write(ftpmap,":: %u, ", port[n]);
         if (n != 0) {
             portdif = (long) port[n] - (long) port[n - 1];
             if (portdif < 0L) {
@@ -484,46 +488,6 @@ void ftpmap_fuzz(ftpmap_t *ftpmap, detect_t *detect) {
     fclose(ftpmap->fid);
 }
 
-void ftpmap_getlist(ftpmap_t *ftpmap) {
-    FILE *fid;
-    char buffer[MAX_STR];
-    char *answer = NULL;
-    
-    logger_write(ftpmap,":: Trying to receive LIST..\n\n");
-    fid = ftpmap_data_tunnel(ftpmap);
-    fprintf(ftpmap->fid, "LIST %s\r\n", ftpmap->listpath);
-    answer = ftpmap_getanswer(ftpmap);
-
-    signal(SIGALRM, sigalrm);
-    alarm(5);
-
-    while ( (fgets(buffer, sizeof(buffer), fid)) != NULL ) {
-        logger_write(ftpmap,"%s", buffer);
-    }
-    logger_write(ftpmap,":: End of output\n");
-}
-
-void ftpmap_delete(ftpmap_t *ftpmap) {
-    char *answer = NULL;
-
-    fprintf(ftpmap->fid, "DELE %s\r\n", ftpmap->deletepath);
-    answer = ftpmap_getanswer(ftpmap);
-    if ( *answer == 0 )
-        return;
-    logger_write(ftpmap,":: %s", answer);
-}
-
-void ftpmap_mdtm(ftpmap_t *ftpmap) {
-    char *answer = NULL;
-
-    fprintf(ftpmap->fid, "MDTM %s\r\n", ftpmap->mdtmpath);
-    answer = ftpmap_getanswer(ftpmap);
-    if ( *answer == 0 )
-        return;
-
-    logger_write(ftpmap,":: %s",answer);
-}
-
 void ftpmap_calc_data_port(ftpmap_t *ftpmap) {
     char *answer = NULL, *actualstr = NULL;
     char str[MAX_STR];
@@ -555,6 +519,7 @@ int main(int argc, char **argv) {
 
     static struct option long_options[] = {
         {"server", required_argument, 0, 's'},
+        {"scan", no_argument, 0, 'S'},
         {"port",   required_argument, 0, 'P'},
         {"user",   required_argument, 0, 'u'},
         {"password", required_argument, 0, 'p'},
@@ -573,11 +538,14 @@ int main(int argc, char **argv) {
         {"version", no_argument, 0, 'v'},
     };
 
-    while (( opt = getopt_long(argc, argv, "s:P:u:p:x:b:flhvnAo:FL:D:m:", 
+    while (( opt = getopt_long(argc, argv, "s:P:u:p:x:b:flhvnAo:FL:D:m:S", 
                     long_options, &long_index)) != -1 ) {
             switch(opt) {
                 case 's':
                         ftpmap->server = strdup(optarg);
+                        break;
+                case 'S':
+                        ftpmap->scan_mode = 1;
                         break;
                 case 'P':
                         ftpmap->port = strdup(optarg);
@@ -629,22 +597,22 @@ int main(int argc, char **argv) {
                         print_usage(0);
              }
         }
-
-   
+    
     if ( ftpmap->server == NULL ) {
         printf("Error: Please tell me what server has to be probed (-s <host>)\n\n");
         print_usage(1);
     }
-
  
     logger_open(ftpmap);
     ftpmap_reconnect(ftpmap,1); 
-    print_startup(ftpmap);
-
+ 
     if ( ftpmap->fuzzer ) {
         ftpmap_fuzz(ftpmap,detect);
         goto end;
     }
+
+    if ( ftpmap->scan_mode )
+        print_startup(ftpmap);
 
     ftpmap_login(ftpmap, detect,1);
     
@@ -671,18 +639,22 @@ int main(int argc, char **argv) {
         goto end;
     }
 
-    ftpmap_detect_version_by_banner(ftpmap,detect);
+    /* scanning starts from here */
+    if ( ftpmap->scan_mode ) {
+        ftpmap_detect_version_by_banner(ftpmap,detect);
+
+        if ( ftpmap->skipfingerprint == 0 || ftpmap->forcefingerprint ) {
+            ftpmap_fingerprint(ftpmap, detect);
+            ftpmap_findwinner(ftpmap,detect);
+        }
     
-    if ( ftpmap->skipfingerprint == 0 || ftpmap->forcefingerprint ) {
-        ftpmap_fingerprint(ftpmap, detect);
-        ftpmap_findwinner(ftpmap,detect);
+        ftpmap_findexploit(ftpmap,detect,exploit);
+        ftpmap_findseq(ftpmap);
+
     }
-    
-    ftpmap_findexploit(ftpmap,detect,exploit);
-    ftpmap_findseq(ftpmap);
 
     end:
-       ftpmap_end(ftpmap, detect, exploit);
+        ftpmap_end(ftpmap, detect, exploit);
     
     return 0;
 }

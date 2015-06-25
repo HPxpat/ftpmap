@@ -101,7 +101,7 @@ CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
 am_ftpmap_OBJECTS = ftpmap.$(OBJEXT) tcp.$(OBJEXT) misc.$(OBJEXT) \
-	logger.$(OBJEXT)
+	logger.$(OBJEXT) client.$(OBJEXT)
 ftpmap_OBJECTS = $(am_ftpmap_OBJECTS)
 ftpmap_LDADD = $(LDADD)
 AM_V_P = $(am__v_P_@AM_V@)
@@ -257,7 +257,7 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-ftpmap_SOURCES = ftpmap.c ftpmap.h fingerprints.h testcmds.h tcp.c tcp.h misc.c misc.h logger.c logger.h
+ftpmap_SOURCES = ftpmap.c ftpmap.h fingerprints.h testcmds.h tcp.c tcp.h misc.c misc.h logger.c logger.h client.c client.h
 all: all-am
 
 .SUFFIXES:
@@ -344,6 +344,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/client.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ftpmap.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/logger.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/misc.Po@am__quote@
