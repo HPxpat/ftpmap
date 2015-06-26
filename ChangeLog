@@ -33,3 +33,10 @@
     ftpmap_getlist()
     ftpmap_mdtm()
     ftpmap_delete()
+
+* Version 0.10: 
+    now ftp-exploit-db/ftp-versions-file is in exploits.h/versions.h
+    make install works now.
+    deleted some old files.
+    bug fixes.
+    more fingerprints.

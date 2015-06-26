@@ -21,6 +21,8 @@
 #include "ftpmap.h"
 #include "testcmds.h"
 #include "fingerprints.h"
+#include "exploits.h"
+#include "versions.h"
 #include "tcp.h"
 #include "misc.h"
 #include "logger.h"
@@ -129,21 +131,14 @@ char * ftpmap_getanswer_long(ftpmap_t *ftpmap) {
 
 
 void ftpmap_detect_version_by_banner(ftpmap_t *ftpmap, detect_t *detect) {
-    FILE *fp;
-    char v[MAX_STR];
-    char vv[MAX_STR];
+    const char **ptr = NULL;
 
     logger_write(ftpmap,":: Trying to detect FTP server by banner...\n");
+    sprintf(ftpmap->unsoftware, "%s%s", detect->software, detect->version);
 
-    if (( fp = fopen(DB_VERSIONS, "r")) == NULL )
-         die(1, "Failed to open: %s. Did you try: \"make install\" ?.", DB_VERSIONS);
-
-   sprintf(vv, "%s%s", detect->software, detect->version);
-
-    while (( fgets(v, sizeof(v), fp)) != NULL ) {
-        strtok(v, "\n");
-        if ( !strcasecmp(v, vv)) {
-            logger_write(ftpmap,":: FTP server running: %s\n", v);
+    for ( ptr = versions; *ptr; ptr++ ) {
+        if ( ! strcasecmp(ftpmap->unsoftware, *ptr)) {
+            logger_write(ftpmap,":: FTP server running: %s\n", *ptr);
             logger_write(ftpmap,":: No need to generate fingerprint. (use -F to disable this)\n");
             ftpmap->versiondetected = 1;
             ftpmap->skipfingerprint = 1;
@@ -191,24 +186,20 @@ int ftpmap_login(ftpmap_t *ftpmap, detect_t *detect, int v) {
 }
 
 void ftpmap_findexploit(ftpmap_t *ftpmap, detect_t *detect, exploit_t *exploit) {
-    FILE *fp;
-    char l[MAX_STR];
+    const char **ptr = NULL;
     int cexploit = 0;
 
     if ( detect->fisoftware )
         sscanf(detect->fisoftware, "%s %s", detect->fsoftware, detect->fversion);
 
-    if (( fp = fopen(DB_EXPLOITDB, "r")) == NULL )
-        die(1, "Failed to open: %s. Did you try: \"make install\" ?.", DB_EXPLOITDB);
-
-
     logger_write(ftpmap,":: Searching exploits...\n");
-    while (( fgets(l, sizeof(l), fp)) != NULL ) {
-        sscanf(l, "%d,%[^\n]s", &exploit->id, exploit->exploit);
-        
+
+    for ( ptr = exploits; *ptr; ptr++ ) {
+        sscanf(*ptr, "%d %[^\n]s", &exploit->id, exploit->exploit);
+
         if ( ftpmap->versiondetected ) {
             /* First search exploits by banner */
-            if ( strstr(exploit->exploit, detect->software) && strstr(exploit->exploit, detect->version)) {
+            if ( strcasestr(exploit->exploit, detect->software) && strcasestr(exploit->exploit, detect->version)) {
                 ftpmap_draw(0x2d, strlen(exploit->exploit));
                 logger_write(ftpmap,"\n|%8s|\n", exploit->exploit);
                 ftpmap_draw(0x2d, strlen(exploit->exploit));
@@ -221,7 +212,19 @@ void ftpmap_findexploit(ftpmap_t *ftpmap, detect_t *detect, exploit_t *exploit) 
 
         else if ( ftpmap->fingerprinthasmatch ) {
             /* Second search exploit by fingerprint */
-            if ( strstr(exploit->exploit,detect->fsoftware) && strstr(exploit->exploit,detect->fversion)) { 
+            if ( strcasestr(exploit->exploit,detect->fsoftware) && strcasestr(exploit->exploit,detect->fversion)) { 
+                ftpmap_draw(0x2d, strlen(exploit->exploit));
+                logger_write(ftpmap,"\n|%8s|\n", exploit->exploit);
+                ftpmap_draw(0x2d, strlen(exploit->exploit));
+                logger_write(ftpmap,"|http://exploit-db.com/download/%d|\n", exploit->id); 
+                ftpmap_draw(0x2d, 35);
+                putchar(0x0a);
+                cexploit++;
+            }
+        }
+        /* Final check if there is exploit */
+        else if ( !ftpmap->versiondetected || ! ftpmap->fingerprinthasmatch ) {
+            if ( strcasestr(exploit->exploit, detect->software) && strcasestr(exploit->exploit, detect->version)) {
                 ftpmap_draw(0x2d, strlen(exploit->exploit));
                 logger_write(ftpmap,"\n|%8s|\n", exploit->exploit);
                 ftpmap_draw(0x2d, strlen(exploit->exploit));

@@ -37,6 +37,7 @@ typedef struct {
     FILE *fid;
     FILE *loggerfp;
     char ip_addr[MAX_STR];
+    char unsoftware[MAX_STR];
     char *answer;
     char *server;
     char *port;

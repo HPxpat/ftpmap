@@ -27,3 +27,9 @@
 
 - Version 0.8:
     Back to the old Makefile.
+
+- Version 0.9:
+    db/ folder removed.
+    now ftp-exploit-db file is in exploits.h
+    now ftp-versions-db file is in versions.h
+    

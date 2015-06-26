@@ -12,12 +12,11 @@ FTP software/version. and FTP-Map also contains tools for remote take-over.
 
 
 Build
-======
-		 "make install will not work for now."
+=====
 
     ./configure
     make
-    cd src && ./ftpmap -h
+    sudo make install 
 
 Usage
 ======
