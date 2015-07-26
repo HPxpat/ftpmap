@@ -1,6 +1,6 @@
 /* logger.c - log output. 
 
-  Copyright (c) Hypsurus
+  Copyright (c) Hypsurus <hypsurus@mail.ru>
 
   FTP-Map is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -40,7 +40,7 @@ void logger_write(ftpmap_t *ftpmap, char *format, ...) {
     va_end(li);
 
     printf("%s", s);
-    fprintf(ftpmap->loggerfp, "[LOG] %s", s);
+    fprintf(ftpmap->loggerfp, "%s", s);
     bzero(s, sizeof(s));
 
 }

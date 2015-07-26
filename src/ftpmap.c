@@ -32,18 +32,16 @@ void ftpmap_init(ftpmap_t *ftpmap) {
     ftpmap->port   = strdup(FTP_DEFAULT_PORT);
     ftpmap->user = strdup(FTP_DEFAULT_USER);
     ftpmap->password = strdup(FTP_DEFAULT_PASSWORD);
-    ftpmap->fuzzerbufferlength = 256;
-    ftpmap->fuzzerloginfirst = 1;
 }
 
 void ftpmap_end(ftpmap_t *ftpmap, detect_t *detect, exploit_t *exploit) {
     fprintf(ftpmap->fid, "QUIT\r\n");
     fclose(ftpmap->fid); 
     if ( ftpmap->scan_mode ) {
-        printf("\n.:: Scan for: %s complete ::.\n", ftpmap->ip_addr);
-        printf("\n:!: Please send the fingerprint to hypsurus@mail.ru to improve FTP-Map.\n\n");  
+        printf("\n:: Scan for: %s completed ::\n", ftpmap->ip_addr);
+        printf(":: Please send the fingerprint to hypsurus@mail.ru to improve FTP-Map.\n\n");  
+        logger_close(ftpmap);
     }
-    logger_close(ftpmap);
     free(ftpmap);
     free(detect);
     free(exploit);
@@ -67,16 +65,12 @@ void print_usage(int ex) {
           "\t--password, -p <password>  - FTP password (default: NULL). \n"
           "\t--execute, -x <cmd>        - Run command on the FTP server.\n"
           "\t--nofingerprint, -n        - Do not generate fingerprint.\n"
-          "\t--login, -A                - Only login, print output and quit.\n"
-          "\t--force, -F                - Force to generate fingerprint.\n"
+          "\t--force, -f                - Force to generate fingerprint.\n"
           "\t--output, -o <file>        - output file.\n"
-          "\t--list, -L <path>          - Get list of files and folders on the FTP server.\n"
+          "\t--list, -l <path>          - Get list of files and folders on the FTP server.\n"
           "\t--delete <path>            - Delete files/folders on the server.\n"
           "\t--last-modified, -m <file> - Returns the last-modified time of the given file\n"
-          "\n\nFuzzer Options:\n"
-          "\t--fuzzer, -f               - Use the Fuzzer.\n"
-          "\t--fuzzerlength,-b <length> - Buffer length to send. (default: 256)\n"
-          "\t--fuzzer-nologin, -l       - Do not login.\n"
+          "\t--download, -d <file>      - Download a file from the FTP Server.\n"
          "\n\nGeneral Options:\n"
           "\t--version, -v              - Show version information and quit.\n"
           "\t--help, -h                 - Show help and quit.\n"
@@ -112,14 +106,14 @@ char * ftpmap_getanswer(ftpmap_t *ftpmap) {
     return answer;
 }
 
-char * ftpmap_getanswer_long(ftpmap_t *ftpmap) {
+char * ftpmap_getanswer_long(FILE *fd, ftpmap_t *ftpmap) {
     static char ret[MAX_ANSWER];
     char answer[MAX_ANSWER];
 
     signal(SIGALRM, sigalrm);
     alarm(5);
     
-    while (fgets(answer, sizeof answer, ftpmap->fid) != NULL) {
+    while (fgets(answer, sizeof answer, fd) != NULL) {
         strncat(ret, answer, strlen(answer));  
     }
     if (*answer == 0) {        
@@ -177,11 +171,17 @@ int ftpmap_login(ftpmap_t *ftpmap, detect_t *detect, int v) {
     if ( *ftpmap->answer == '2' ) {
         if ( v )
             logger_write(ftpmap,":: %s", ftpmap->answer);
+        else
+            printf(":: %s", ftpmap->answer); 
         return 0;
     }
 
-    if ( v )
+    if ( v ) {
         logger_write(ftpmap,":: %s", ftpmap->answer);
+    }
+    else {
+        printf(":: %s", ftpmap->answer); 
+    }
     return -1;
 }
 
@@ -201,7 +201,7 @@ void ftpmap_findexploit(ftpmap_t *ftpmap, detect_t *detect, exploit_t *exploit) 
             /* First search exploits by banner */
             if ( strcasestr(exploit->exploit, detect->software) && strcasestr(exploit->exploit, detect->version)) {
                 ftpmap_draw(0x2d, strlen(exploit->exploit));
-                logger_write(ftpmap,"\n|%8s|\n", exploit->exploit);
+                logger_write(ftpmap,"|%8s|\n", exploit->exploit);
                 ftpmap_draw(0x2d, strlen(exploit->exploit));
                 logger_write(ftpmap,"|http://exploit-db.com/download/%d|\n", exploit->id); 
                 ftpmap_draw(0x2d, 35);
@@ -214,7 +214,7 @@ void ftpmap_findexploit(ftpmap_t *ftpmap, detect_t *detect, exploit_t *exploit) 
             /* Second search exploit by fingerprint */
             if ( strcasestr(exploit->exploit,detect->fsoftware) && strcasestr(exploit->exploit,detect->fversion)) { 
                 ftpmap_draw(0x2d, strlen(exploit->exploit));
-                logger_write(ftpmap,"\n|%8s|\n", exploit->exploit);
+                logger_write(ftpmap,"|%8s|\n", exploit->exploit);
                 ftpmap_draw(0x2d, strlen(exploit->exploit));
                 logger_write(ftpmap,"|http://exploit-db.com/download/%d|\n", exploit->id); 
                 ftpmap_draw(0x2d, 35);
@@ -226,7 +226,7 @@ void ftpmap_findexploit(ftpmap_t *ftpmap, detect_t *detect, exploit_t *exploit) 
         else if ( !ftpmap->versiondetected || ! ftpmap->fingerprinthasmatch ) {
             if ( strcasestr(exploit->exploit, detect->software) && strcasestr(exploit->exploit, detect->version)) {
                 ftpmap_draw(0x2d, strlen(exploit->exploit));
-                logger_write(ftpmap,"\n|%8s|\n", exploit->exploit);
+                logger_write(ftpmap,"|%8s|\n", exploit->exploit);
                 ftpmap_draw(0x2d, strlen(exploit->exploit));
                 logger_write(ftpmap,"|http://exploit-db.com/download/%d|\n", exploit->id); 
                 ftpmap_draw(0x2d, 35);
@@ -443,7 +443,7 @@ void ftpmap_sendcmd(ftpmap_t *ftpmap) {
     for ( lptr = long_output_cmds; *lptr; lptr++ ) {
         if ( strcasecmp(*lptr, ftpmap->cmd) == 0 ) {
            logger_write(ftpmap,"::: Retrieving data for %s...\n\n", ftpmap->cmd);
-            answer = ftpmap_getanswer_long(ftpmap);
+            answer = ftpmap_getanswer_long(ftpmap->fid, ftpmap);
             shorto = 0;
             break;
         }
@@ -452,43 +452,6 @@ void ftpmap_sendcmd(ftpmap_t *ftpmap) {
     if ( shorto )
         answer = ftpmap_getanswer(ftpmap);
     logger_write(ftpmap,"%s", answer);
-}
-
-void ftpmap_fuzz(ftpmap_t *ftpmap, detect_t *detect) {
-    char buffer[ftpmap->fuzzerbufferlength];
-    char *answer = NULL;
-    const char **ptr = NULL;
-    int progress = 0, max = 141;
-
-    if ( ftpmap->fuzzerloginfirst )
-        ftpmap_login(ftpmap, detect, 0);
-    ftpmap_genchars(0x41, buffer, ftpmap->fuzzerbufferlength);
-
-    logger_write(ftpmap,":: Starting the fuzzer on: %s\n", ftpmap->ip_addr);
-    for ( ptr = testcmds; *ptr; ptr++ ) {
-        logger_write(ftpmap,":: Fuzzing the target => %s+0x41 * %d (%d%%)\n",  *ptr, ftpmap->fuzzerbufferlength, progress * 100 / max);
-        if ((ftpmap_reconnect(ftpmap,0) == -1 )) {
-                stop:
-                    logger_write(ftpmap,"\n:: Connection Error: \n=> CMD: %s\n=> Buffer Length: %d\n", *ptr, strlen(buffer));
-                    break;
-        }
-        answer = ftpmap_getanswer(ftpmap);
-        if ( answer == 0 ) {
-            if ((ftpmap_reconnect(ftpmap,0) < 0 ))
-                goto stop;
-        }
-
-        fprintf(ftpmap->fid, "%s %s\r\n",*ptr, buffer);
-
-        answer = ftpmap_getanswer(ftpmap);
-        if ( answer == 0 ) {
-            if ((ftpmap_reconnect(ftpmap,0) < 0 ))
-                goto stop;
-        }
-
-        progress++;
-    }
-    fclose(ftpmap->fid);
 }
 
 void ftpmap_calc_data_port(ftpmap_t *ftpmap) {
@@ -523,25 +486,23 @@ int main(int argc, char **argv) {
     static struct option long_options[] = {
         {"server", required_argument, 0, 's'},
         {"scan", no_argument, 0, 'S'},
+        {"nolog", no_argument, 0, 'g'},
         {"port",   required_argument, 0, 'P'},
         {"user",   required_argument, 0, 'u'},
         {"password", required_argument, 0, 'p'},
         {"execute", required_argument, 0, 'x'},
+        {"download", required_argument, 0, 'd'},
         {"last-modified", required_argument, 0, 'm'},
-        {"fuzzer", no_argument, 0, 'f'},
-        {"fuzzerlength", required_argument, 0, 'b'},
-        {"fuzzer-nologin", no_argument, 0, 'l'},
-        {"login", no_argument, 0, 'A'},
-        {"force", no_argument, 0, 'F'},
+        {"force", no_argument, 0, 'f'},
         {"output", required_argument, 0, 'o'},
         {"nofingerprint", no_argument, 0, 'n'},
-        {"list", required_argument, 0, 'L'},
+        {"list", required_argument, 0, 'l'},
         {"delete", required_argument, 0, 'D'},
         {"help", no_argument, 0, 'h'},
         {"version", no_argument, 0, 'v'},
     };
 
-    while (( opt = getopt_long(argc, argv, "s:P:u:p:x:b:flhvnAo:FL:D:m:S", 
+    while (( opt = getopt_long(argc, argv, "s:P:u:p:x:fl:hvo:D:m:Sd:", 
                     long_options, &long_index)) != -1 ) {
             switch(opt) {
                 case 's':
@@ -561,20 +522,9 @@ int main(int argc, char **argv) {
                         break;
                 case 'x':
                         ftpmap->cmd = strdup(optarg);
+                        ftpmap->action = 5;
                         break;
                 case 'f':
-                        ftpmap->fuzzer = 1;
-                        break;
-                case 'b':
-                        ftpmap->fuzzerbufferlength = atoi(optarg);
-                        break;
-                case 'l':
-                        ftpmap->fuzzerloginfirst = 0;
-                        break;
-                case 'A':
-                        ftpmap->loginonly = 1;
-                        break;
-                case 'F':
                         ftpmap->forcefingerprint = 1;
                         break;
                 case 'o':
@@ -583,14 +533,21 @@ int main(int argc, char **argv) {
                 case 'n':
                         ftpmap->skipfingerprint = 1;
                         break;
-                case 'L':
-                        ftpmap->listpath = strdup(optarg);
+                case 'l':
+                        ftpmap->path = strdup(optarg);
+                        ftpmap->action = 1;
                         break;
                 case 'D':
-                        ftpmap->deletepath = strdup(optarg);
+                        ftpmap->path = strdup(optarg); 
+                        ftpmap->action = 2;
                         break;
                 case 'm':
-                        ftpmap->mdtmpath = strdup(optarg);
+                        ftpmap->path = strdup(optarg);
+                        ftpmap->action = 3;
+                        break;
+                case 'd':
+                        ftpmap->path = strdup(optarg);
+                        ftpmap->action = 4;
                         break;
                 case 'h':
                         print_usage(0);
@@ -606,40 +563,33 @@ int main(int argc, char **argv) {
         print_usage(1);
     }
  
-    logger_open(ftpmap);
+    if ( ftpmap->scan_mode )
+        logger_open(ftpmap);
     ftpmap_reconnect(ftpmap,1); 
  
-    if ( ftpmap->fuzzer ) {
-        ftpmap_fuzz(ftpmap,detect);
-        goto end;
-    }
-
-    if ( ftpmap->scan_mode )
+    if ( ftpmap->scan_mode ) {
         print_startup(ftpmap);
-
-    ftpmap_login(ftpmap, detect,1);
-    
-    if ( ftpmap->listpath ) {
-        ftpmap_getlist(ftpmap);
-        goto end;
+        ftpmap_login(ftpmap, detect,1);
     }
+    else
+        ftpmap_login(ftpmap, detect,0);
 
-    if ( ftpmap->deletepath ) {
-        ftpmap_delete(ftpmap);
-        goto end;
-    }
-
-    if ( ftpmap->mdtmpath ) {
-        ftpmap_mdtm(ftpmap);
-        goto end;
-    }
-
-    if ( ftpmap->loginonly )
-        goto end;
-
-    if ( ftpmap->cmd ) {
-        ftpmap_sendcmd(ftpmap);
-        goto end;
+    switch(ftpmap->action) {
+        case 1:
+            ftpmap_getlist(ftpmap);
+            goto end;
+        case 2:
+            ftpmap_delete(ftpmap);
+            goto end;
+        case 3:
+            ftpmap_mdtm(ftpmap);
+            goto end;
+        case 4:
+            ftpmap_download(ftpmap);
+            goto end;
+        case 5:
+            ftpmap_sendcmd(ftpmap);
+            goto end;
     }
 
     /* scanning starts from here */
@@ -653,7 +603,6 @@ int main(int argc, char **argv) {
     
         ftpmap_findexploit(ftpmap,detect,exploit);
         ftpmap_findseq(ftpmap);
-
     }
 
     end:

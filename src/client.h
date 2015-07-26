@@ -7,5 +7,6 @@
 void ftpmap_getlist(ftpmap_t *ftpmap);
 void ftpmap_delete(ftpmap_t *ftpmap);
 void ftpmap_mdtm(ftpmap_t *ftpmap);
+void ftpmap_download(ftpmap_t *ftpmap);
 
 #endif /*CLIENT_H*/

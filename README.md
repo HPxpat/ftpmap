@@ -1,6 +1,16 @@
 FTP-Map
 ==========
 
+News
+=======
+
+* 27-07-2015 (ftpmap 0.11)
+
+    --download option (alpha!), can download only a single file for now.        
+    fuzzer removed from ftpmap (unneeded).
+
+About
+=====
 Ftpmap scans remote FTP servers to indentify what software and what versions
 they are running. It uses program-specific fingerprints to discover the name
 of the software even when banners have been changed or removed, or when some
@@ -33,20 +43,12 @@ Options:
         --password, -p <password>  - FTP password (default: NULL). 
         --execute, -x <cmd>        - Run command on the FTP server.
         --nofingerprint, -n        - Do not generate fingerprint.
-        --login, -A                - Only login, print output and quit.\
-        --force, -F                - Force to generate fingerprint.
+        --force, -f                - Force to generate fingerprint.
         --output, -o <file>        - output file.
-        --list, -L <path>          - Get list of files and folders on the FTP server.
+        --list, -l <path>          - Get list of files and folders on the FTP server.
         --delete <path>            - Delete files/folders on the server.
         --last-modified, -m <file> - Returns the last-modified time of the given file
-
-
-Fuzzer Options:
-	
-        --fuzzer, -f               - Use the Fuzzer.
-        --fuzzerlength,-b <length> - Buffer length to send. (default: 256)
-        --fuzzer-nologin, -l       - Do not login.
-
+        --download, d <file>       - download file.
 
 General Options:
 

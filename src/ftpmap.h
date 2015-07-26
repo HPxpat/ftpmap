@@ -46,9 +46,7 @@ typedef struct {
     char *cmd;
     char *passwords;
     char *loggerfile;
-    char *listpath;
-    char *deletepath;
-    char *mdtmpath;
+    char *path;
     int dataport;
     int scan_mode;
     /* Flags */
@@ -56,10 +54,7 @@ typedef struct {
     int fingerprinthasmatch;
     int skipfingerprint;
     int forcefingerprint;
-    int loginonly;
-    int fuzzer;
-    int fuzzerbufferlength;
-    int fuzzerloginfirst;
+    int action;
  } ftpmap_t;
 
 typedef struct {
@@ -84,8 +79,8 @@ void ftpmap_detect_version_by_banner(ftpmap_t *ftpmap, detect_t *detect);
 void ftpmap_findexploit(ftpmap_t *ftpmap, detect_t *detect, exploit_t *exploit);
 int ftpmap_compar(const void *a_, const void *b_);
 void ftpmap_sendcmd(ftpmap_t *ftpmap);
-void ftpmap_fuzz(ftpmap_t *ftpmap, detect_t *detect);
 void ftpmap_calc_data_port(ftpmap_t *ftpmap);
 char * ftpmap_getanswer(ftpmap_t*);
+char * ftpmap_getanswer_long(FILE *, ftpmap_t *);
 
 #endif /*FTPMAP_H*/

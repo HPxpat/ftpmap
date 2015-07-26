@@ -1,2 +1,2 @@
 bin_PROGRAMS = ftpmap 
-ftpmap_SOURCES = ftpmap.c ftpmap.h fingerprints.h testcmds.h tcp.c tcp.h misc.c misc.h logger.c logger.h client.c client.h
+ftpmap_SOURCES = ftpmap.c tcp.c misc.c logger.c client.c

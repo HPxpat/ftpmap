@@ -1,6 +1,6 @@
 /* misc.c  - FTP-Map misc
  
-  Copyright (c) Hypsurus
+  Copyright 2015 (c) by Hypsurus <hypsurus@mail.ru>
 
   FTP-Map is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -18,6 +18,37 @@
 
 
 #include "misc.h"
+
+char * calc_bytes_size(size_t size) {
+    float KB = 1024;
+    float MB = 1024 * 1024;
+    float GB = 1024 * 1024 * 1024;
+    char *ret = NULL;
+    /*int TB = 1024 * 1024 * 1024 * 1024; */
+    
+    if ( size >= KB ) {
+        ret = fret("%.2f%s", size / KB, KB_PREFIX);
+    }
+    if ( size >= MB ) {
+        ret = fret("%.2f%s", size / MB, MB_PREFIX);
+    }
+    if ( size >= GB ) {
+        ret = fret("%.2f%s", size / GB, GB_PREFIX);
+   }
+
+    return ret;
+}
+
+char * fret(char *format, ...) {
+    char *ret = xmalloc(MAX_STR);
+    va_list li;
+
+    va_start(li, format);
+    vsprintf(ret, format, li);
+    va_end(li);
+
+    return ret;
+}
 
 void die(int stat, char *format, ...) {
         va_list li;

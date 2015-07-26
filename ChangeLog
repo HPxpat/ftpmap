@@ -40,3 +40,11 @@
     deleted some old files.
     bug fixes.
     more fingerprints.
+
+* Version 0.11:
+    new option --download [alpha]
+    removed multiple paths in getopt.
+    using switch(action).
+    bug fixes.
+    fuzzer, -A option removed.
+    -L, -F is now -l,-f in --list and --force.
