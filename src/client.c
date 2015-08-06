@@ -59,6 +59,8 @@ void ftpmap_download(ftpmap_t *ftpmap) {
     char *answer = NULL;
     char buffer[MAX_STR];
 
+    if ( ftpmap->logged != 0 )
+        die(1, "Unable to download \'%s\' (not logged in)", ftpmap->path);
     filename =  (strrchr(ftpmap->path, '/'))+1;
 
     if (( file = fopen(filename, "w")) == NULL )
@@ -76,6 +78,42 @@ void ftpmap_download(ftpmap_t *ftpmap) {
             buffer[rsize +1] = '\0';       
         dsize += fwrite(buffer, 1, rsize, file);
         printf(":-: Downloading %s %s/%s ...\r",ftpmap->path,calc_bytes_size(dsize), 
+                calc_bytes_size(fsize));
+        fflush(stdout);
+    }
+    printf("\n:-: File saved: %s\n", filename);
+    fclose(file);
+}
+
+void ftpmap_upload(ftpmap_t *ftpmap) {
+    long fsize;;
+    int usize = 0, rsize = 0;
+    FILE *fd, *file;
+    char *filename = NULL;
+    char *answer = NULL;
+    char buffer[MAX_STR];
+
+    filename =  (strrchr(ftpmap->path, '/'))+1;
+
+    if ( ftpmap->logged != 0 )
+        die(1, "Unable to upload \'%s\' (not logged in)", ftpmap->path);
+
+    if (( file = fopen(ftpmap->path, "r")) == NULL )
+        die(1, "Failed to read %s.", ftpmap->path);
+
+    fsize = ftell(file);
+    printf("--> %ld", fsize);
+    fd = ftpmap_data_tunnel(ftpmap);
+    fprintf(ftpmap->fid, "STOR %s\r\n", ftpmap->path);
+    answer = ftpmap_getanswer(ftpmap);
+    if ( *answer == 0 )
+        return;
+
+    while (( rsize = fread(buffer, 1, sizeof(buffer), file)) > 0 ) {
+        if ( buffer[rsize +1] == '\r' )
+            buffer[rsize +1] = '\0';       
+        usize += fwrite(buffer, 1, rsize, fd);
+        printf(":-: Uploading %s %s/%s ...\r",ftpmap->path,calc_bytes_size(usize), 
                 calc_bytes_size(fsize));
         fflush(stdout);
     }

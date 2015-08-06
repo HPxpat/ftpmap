@@ -44,7 +44,6 @@ typedef struct {
     char *user;
     char *password;
     char *cmd;
-    char *passwords;
     char *loggerfile;
     char *path;
     int dataport;
@@ -54,7 +53,7 @@ typedef struct {
     int fingerprinthasmatch;
     int skipfingerprint;
     int forcefingerprint;
-    int action;
+    int logged;
  } ftpmap_t;
 
 typedef struct {
