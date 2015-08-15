@@ -500,7 +500,7 @@ int main(int argc, char **argv) {
         {"list", required_argument, 0, 'l'},
         {"delete", required_argument, 0, 'D'},
         {"log", no_argument, 0, 'g'},
-        {"size", no_argument, 0, 'z'},
+        {"size", required_argument, 0, 'z'},
         {"help", no_argument, 0, 'h'},
         {"version", no_argument, 0, 'v'},
     };
