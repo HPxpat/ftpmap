@@ -36,3 +36,10 @@
 - Version 0.11:
     --download option (experimental!!)
     fuzzer removed from ftpmap (uneeded)
+
+- Version 0.12:
+    new --upload, and --download are ready.
+    auto log disabled by default FTP-Map will not create log file.
+    bug fixes (segfault).
+    new fingerprints.
+    exploits.h updated.

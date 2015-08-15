@@ -27,8 +27,10 @@ void logger_open(ftpmap_t *ftpmap) {
     if ( ftpmap->loggerfile == NULL )
         ftpmap->loggerfile = strdup(filename);
 
-    if (( ftpmap->loggerfp = fopen(ftpmap->loggerfile, "w+")) == NULL )
-        die(1, "Unable to write log file: %s", ftpmap->loggerfile);
+    if ( ftpmap->nolog == 0 ) {
+        if (( ftpmap->loggerfp = fopen(ftpmap->loggerfile, "w+")) == NULL )
+            die(1, "Unable to write log file: %s", ftpmap->loggerfile);
+    }
 }
 
 void logger_write(ftpmap_t *ftpmap, char *format, ...) {
@@ -40,8 +42,8 @@ void logger_write(ftpmap_t *ftpmap, char *format, ...) {
     va_end(li);
 
     printf("%s", s);
-    fprintf(ftpmap->loggerfp, "%s", s);
-    bzero(s, sizeof(s));
+    if ( ftpmap->nolog == 0 )
+        fprintf(ftpmap->loggerfp, "%s", s);
 
 }
 

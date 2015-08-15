@@ -27,7 +27,7 @@ void ftpmap_getlist(ftpmap_t *ftpmap) {
     char *answer = NULL;
     
     printf(":: Getting LIST..\n\n");
-    fid = ftpmap_data_tunnel(ftpmap);
+    fid = ftpmap_data_tunnel(ftpmap, "r");
     fprintf(ftpmap->fid, "LIST %s\r\n", ftpmap->path);
     answer = ftpmap_getanswer(ftpmap);
 
@@ -40,9 +40,9 @@ void ftpmap_getlist(ftpmap_t *ftpmap) {
     printf("\n:: End of output\n");
 }
 
-int ftpmap_fsize(ftpmap_t *ftpmap) {
+long int ftpmap_fsize(ftpmap_t *ftpmap) {
     char *answer = NULL;
-    int size = 0;
+    long int size = 0;
     char code[MAX_STR];
 
     fprintf(ftpmap->fid, "SIZE %s\r\n", ftpmap->path); 
@@ -59,67 +59,80 @@ void ftpmap_download(ftpmap_t *ftpmap) {
     char *answer = NULL;
     char buffer[MAX_STR];
 
-    if ( ftpmap->logged != 0 )
-        die(1, "Unable to download \'%s\' (not logged in)", ftpmap->path);
     filename =  (strrchr(ftpmap->path, '/'))+1;
 
     if (( file = fopen(filename, "w")) == NULL )
         die(1, "Failed to write %s.", ftpmap->path);
 
-    fd = ftpmap_data_tunnel(ftpmap);
+    fd = ftpmap_data_tunnel(ftpmap, "r");
+
+    fprintf(ftpmap->fid, "TYPE I\r\n");
+    answer = ftpmap_getanswer(ftpmap);
+    if ( *answer == 0 )
+        return;
+
     fprintf(ftpmap->fid, "RETR %s\r\n", ftpmap->path);
     answer = ftpmap_getanswer(ftpmap);
 
     if ( *answer == 0 )
         return;
-
+    logger_write(ftpmap, ":-: %s", answer);
     while (( rsize = fread(buffer, 1, sizeof(buffer), fd)) > 0 ) {
-        if ( buffer[rsize +1] == '\r' )
-            buffer[rsize +1] = '\0';       
+         if ( buffer[rsize +1] == '\r' )
+            buffer[rsize +1] = '\0';
         dsize += fwrite(buffer, 1, rsize, file);
         printf(":-: Downloading %s %s/%s ...\r",ftpmap->path,calc_bytes_size(dsize), 
                 calc_bytes_size(fsize));
         fflush(stdout);
-    }
-    printf("\n:-: File saved: %s\n", filename);
+   }
+    printf(":-: File saved: %s\n", filename);
     fclose(file);
 }
 
 void ftpmap_upload(ftpmap_t *ftpmap) {
-    long fsize;;
-    int usize = 0, rsize = 0;
-    FILE *fd, *file;
-    char *filename = NULL;
+    FILE *lfp, *fd;
+    int fsize = 0;
+    int rsize = 0, dsize = 0;
+    int buffer[MAX_STR];
+    char *filename = "d";
     char *answer = NULL;
-    char buffer[MAX_STR];
+   
+    if ( strrchr(ftpmap->path, '/'))
+        filename = (strrchr(ftpmap->path, '/'))+1;
+    else
+        filename = ftpmap->path;
+    if (( lfp = fopen(ftpmap->path, "rb")) == NULL )
+        die(1, "Failed to read \'%s\' ...", ftpmap->path);
 
-    filename =  (strrchr(ftpmap->path, '/'))+1;
+    fseek(lfp, 0L, SEEK_END);
+    fsize += (int)ftell(lfp);
+    fseek(lfp, 0L, SEEK_SET);
 
-    if ( ftpmap->logged != 0 )
-        die(1, "Unable to upload \'%s\' (not logged in)", ftpmap->path);
-
-    if (( file = fopen(ftpmap->path, "r")) == NULL )
-        die(1, "Failed to read %s.", ftpmap->path);
-
-    fsize = ftell(file);
-    printf("--> %ld", fsize);
-    fd = ftpmap_data_tunnel(ftpmap);
-    fprintf(ftpmap->fid, "STOR %s\r\n", ftpmap->path);
+    fd = ftpmap_data_tunnel(ftpmap, "w");
+    
+    fprintf(ftpmap->fid, "TYPE I\r\n");
     answer = ftpmap_getanswer(ftpmap);
     if ( *answer == 0 )
         return;
 
-    while (( rsize = fread(buffer, 1, sizeof(buffer), file)) > 0 ) {
-        if ( buffer[rsize +1] == '\r' )
-            buffer[rsize +1] = '\0';       
-        usize += fwrite(buffer, 1, rsize, fd);
-        printf(":-: Uploading %s %s/%s ...\r",ftpmap->path,calc_bytes_size(usize), 
+    fprintf(ftpmap->fid, "STOR %s\r\n", filename);
+    answer = ftpmap_getanswer(ftpmap);
+    if ( *answer == 0 )
+        return;
+
+    logger_write(ftpmap, ":-: %s", answer);
+    while (( rsize = fread(buffer, 1, sizeof(buffer), lfp)) > 0 ) {
+        if ( buffer[rsize +1 ] == '\r' ) 
+            buffer[rsize + 1] = '\0';
+        dsize += fwrite(buffer, 1, rsize, fd);
+        printf(":-: Uploading %s %s/%s bytes...\r", filename, calc_bytes_size(dsize), 
                 calc_bytes_size(fsize));
-        fflush(stdout);
+        fflush(stdout); 
     }
-    printf("\n:-: File saved: %s\n", filename);
-    fclose(file);
+    printf(":-: File \'%s\' Uploaded ...\n", filename);
+    fclose(lfp);
 }
+
 
 void ftpmap_delete(ftpmap_t *ftpmap) {
     char *answer = NULL;

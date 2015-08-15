@@ -1,25 +1,31 @@
 FTP-Map
 ==========
 
-News
-=======
+Developer notes
+================
 
-* 27-07-2015 (ftpmap 0.11)
+* In this version (0.12) FTP-Map has support for downloading/uploading a single file from FTP Servers.
+* The auto log function has been removed from version 0.12 (to use it run FTP-Map with -g)
 
-    --download option (alpha!), can download only a single file for now.        
-    fuzzer removed from ftpmap (unneeded).
+<p> FTPMap should work on ( As far I know): </p>
+
+* linux (Arch, Debian, Fedora etc..) 100%
+* ARM (RaspberryPi, Android etc..). 100%
+* BSD (FreeBSD, etc..) 100%
+* Mac? (I didn't test)
+* Windows (Cygwin?)
+
 
 About
 =====
+
 Ftpmap scans remote FTP servers to indentify what software and what versions
 they are running. It uses program-specific fingerprints to discover the name
 of the software even when banners have been changed or removed, or when some
 features have been disabled. FTP-Map will try to detect exploits by the  
-FTP software/version. and FTP-Map also contains tools for remote take-over.
-
+FTP software/version.
 
 ![FtpMap09](https://pbs.twimg.com/media/CHZpCaoUEAAXCrZ.jpg)
-
 
 Build
 =====
@@ -31,34 +37,22 @@ Build
 Usage
 ======
 
-Using ftpmap is trivial, and the built-in help is self-explanatory :
 
+* Scan server:
+    > ftpmap -s localhost -S -g
 
-Options:
-        
-        --scan, -S                 - Start FTP scan.
-        --server, -s <host>        - The FTP server.
-        --port, -P <port>          - The FTP port (default: 21).
-        --user, -u <user>          - FTP user (default: anonymous).
-        --password, -p <password>  - FTP password (default: NULL). 
-        --execute, -x <cmd>        - Run command on the FTP server.
-        --nofingerprint, -n        - Do not generate fingerprint.
-        --force, -f                - Force to generate fingerprint.
-        --output, -o <file>        - output file.
-        --list, -l <path>          - Get list of files and folders on the FTP server.
-        --delete <path>            - Delete files/folders on the server.
-        --last-modified, -m <file> - Returns the last-modified time of the given file
-        --download, d <file>       - download file.
+* Upload a file.
+    > ftpmap -s localhost --user root --password root -U 'topsecretfile.txt'
 
-General Options:
+* Download a file:
+    > ftpmap -s localhost --user root --password root -d '/topsecretfile.txt'
 
-        --version, -v              - Show version information and quit.
-        --help, -h                 - Show help and quit.
+* list files:
+    > ftpmap -s localhost --user anonymous -p null -l '/'
 
-And...
-======
+* use --help for the full options.
 
-please send the fingerprint and the name of the software to hypsurus@mail.ru.
+Please send the fingerprint and the name of the software to hypsurus@mail.ru.
 Another indication that can be displayed if login was successful is the FTP
 PORT sequence prediction. If the difficulty is too low, it means that anyone
 can steal your files and change their content, even without knowing your

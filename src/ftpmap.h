@@ -53,7 +53,8 @@ typedef struct {
     int fingerprinthasmatch;
     int skipfingerprint;
     int forcefingerprint;
-    int logged;
+    int nolog;
+    int code;
  } ftpmap_t;
 
 typedef struct {

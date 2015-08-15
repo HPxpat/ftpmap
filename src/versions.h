@@ -1,6 +1,6 @@
-/* versions.h - FTP-Server versions for detection by the banner */
+/* versions.h - ftp versions */
 
-const char *versions[] = {
+const char * versions[] = {
 	"ProFTPD1.3.5",
 	"ProFTPD1.3.4e",
 	"ProFTPD1.3.4d",

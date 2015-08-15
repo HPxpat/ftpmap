@@ -19,7 +19,7 @@
 
 #include "misc.h"
 
-char * calc_bytes_size(size_t size) {
+char * calc_bytes_size(int size) {
     float KB = 1024;
     float MB = 1024 * 1024;
     float GB = 1024 * 1024 * 1024;

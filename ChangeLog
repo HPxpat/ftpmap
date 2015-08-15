@@ -48,3 +48,11 @@
     bug fixes.
     fuzzer, -A option removed.
     -L, -F is now -l,-f in --list and --force.
+
+* Version 0.12:
+    --upload option added.
+    --size option for file size.
+    --log option.
+    bug fixes.
+    new tool updatexploits.sh.
+

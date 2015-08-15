@@ -15,7 +15,7 @@ void ftpmap_draw(int,int);
 void ftpmap_genchars(int,char*,int);
 void * xmalloc(size_t);
 void sigalrm(int);
-char * calc_bytes_size(size_t); 
+char * calc_bytes_size(int); 
 char * fret(char *, ...);
 
 #endif /*MISC_H*/

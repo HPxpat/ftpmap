@@ -63,7 +63,7 @@ int ftpmap_reconnect(ftpmap_t *ftpmap, int ex) {
     return 1;
 }
 
-FILE * ftpmap_data_tunnel(ftpmap_t *ftpmap) {
+FILE * ftpmap_data_tunnel(ftpmap_t *ftpmap, char *mode) {
     FILE *fid;
     struct sockaddr_in s;
 
@@ -79,5 +79,5 @@ FILE * ftpmap_data_tunnel(ftpmap_t *ftpmap) {
     if (( connect(dfd, (struct sockaddr *)&s, sizeof s)) < 0 )
         die(1, "data_tunnel: Failed to connect.");
 
-    return (fdopen(dfd, "r"));
+    return (fdopen(dfd, mode));
 }

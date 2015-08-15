@@ -6,6 +6,6 @@
 #include "misc.h"
 
 int ftpmap_reconnect(ftpmap_t*,int);
-FILE *ftpmap_data_tunnel(ftpmap_t*);
+FILE *ftpmap_data_tunnel(ftpmap_t*, char *mode);
 
 #endif /* TCP_H*/
