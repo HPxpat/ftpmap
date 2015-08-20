@@ -81,11 +81,11 @@ void ftpmap_download(ftpmap_t *ftpmap) {
          if ( buffer[rsize +1] == '\r' )
             buffer[rsize +1] = '\0';
         dsize += fwrite(buffer, 1, rsize, file);
-        printf(":-: Downloading %s %s/%s ...\r",ftpmap->path,calc_bytes_size(dsize), 
-                calc_bytes_size(fsize));
+        printf(":-: Downloading %s %s/%s ...\r",ftpmap->path, dsize ? calc_bytes_size(dsize) : "unknown", 
+                fsize ? calc_bytes_size(fsize) : "unknown");
         fflush(stdout);
    }
-    printf(":-: File saved: %s\n", filename);
+    printf("\n:-: File saved: %s\n", filename);
     fclose(file);
 }
 
@@ -125,11 +125,11 @@ void ftpmap_upload(ftpmap_t *ftpmap) {
         if ( buffer[rsize +1 ] == '\r' ) 
             buffer[rsize + 1] = '\0';
         dsize += fwrite(buffer, 1, rsize, fd);
-        printf(":-: Uploading %s %s/%s bytes...\r", filename, calc_bytes_size(dsize), 
-                calc_bytes_size(fsize));
+        printf(":-: Uploading %s %s/%s bytes...\r", filename, dsize ? calc_bytes_size(dsize) : "unknown", 
+                fsize ? calc_bytes_size(fsize) : "unknown");
         fflush(stdout); 
     }
-    printf(":-: File \'%s\' Uploaded ...\n", filename);
+    printf("\n:-: File \'%s\' Uploaded ...\n", filename);
     fclose(lfp);
 }
 
