@@ -43,3 +43,9 @@
     bug fixes (segfault).
     new fingerprints.
     exploits.h updated.
+
+- Version:
+    by default ftpmap will not crate fingerprint file.
+    bug fixes.
+    the exploit.h NULL line bug fixed.
+

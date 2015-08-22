@@ -38,7 +38,6 @@ typedef struct {
     FILE *loggerfp;
     char ip_addr[MAX_STR];
     char unsoftware[MAX_STR];
-    char *answer;
     char *server;
     char *port;
     char *user;
@@ -47,14 +46,13 @@ typedef struct {
     char *loggerfile;
     char *path;
     int dataport;
-    int scan_mode;
     /* Flags */
     int versiondetected;
     int fingerprinthasmatch;
     int skipfingerprint;
     int forcefingerprint;
     int nolog;
-    int code;
+    int scan_mode;
  } ftpmap_t;
 
 typedef struct {
@@ -82,5 +80,5 @@ void ftpmap_sendcmd(ftpmap_t *ftpmap);
 void ftpmap_calc_data_port(ftpmap_t *ftpmap);
 char * ftpmap_getanswer(ftpmap_t*);
 char * ftpmap_getanswer_long(FILE *, ftpmap_t *);
-
+void ftpmap_scan(ftpmap_t *ftpmap, detect_t *detect, exploit_t *exploit, int override);
 #endif /*FTPMAP_H*/

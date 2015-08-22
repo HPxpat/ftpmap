@@ -28,6 +28,8 @@
 #include "logger.h"
 #include "client.h"
 
+#define DEBUG   1
+
 void ftpmap_init(ftpmap_t *ftpmap) {
     ftpmap->port   = strdup(FTP_DEFAULT_PORT);
     ftpmap->user = strdup(FTP_DEFAULT_USER);
@@ -45,16 +47,17 @@ void ftpmap_end(ftpmap_t *ftpmap, detect_t *detect, exploit_t *exploit) {
 void print_version(int c) {
         printf("Copyright FTP-Map %s (c) 2015 FTP-Map developers.\n"
                 "\n-=[ Compiled in: %s %s\n"
-                "-=[ Bug reports/help to: hypsurus@mail.ru\n",VERSION, 
-                __DATE__, __TIME__);
+                "-=[ Bug reports/help to: %s\n",VERSION, 
+                __DATE__, __TIME__, PACKAGE_BUGREPORT);
 
         exit(c);
 }
 void print_usage(int ex) {
     printf("Usage: ftpmap -s [host] [OPTIONS]...\n\n"
           "Options:\n"
-          "\t--scan, -S                 - Start FTP scan.\n"
-          "\t--server, -s <host>        - The FTP server.\n"
+          "\t--scan, -S                 - Start FTP scan on a single target.\n"
+          "\t--server, -s <host>        - FTP server.\n"
+          "\t--list, -L <file>          - Scan ftp servers from a list.\n"
           "\t--port, -P <port>          - The FTP port (default: 21).\n"
           "\t--user, -u <user>          - FTP user (default: anonymous).\n"
           "\t--password, -p <password>  - FTP password (default: NULL). \n"
@@ -69,28 +72,31 @@ void print_usage(int ex) {
           "\t--size, -z <file>          - Get file size on the remote server\n."
           "\t--download, -d <file>      - Download a file from the FTP Server.\n"
           "\t--upload, -U <file>        - Upload a file to the FTP Server.\n"
+          "\t--cat, -c  <file>          - Print remote file (like cat).\n"
          "\n\nGeneral Options:\n"
           "\t--version, -v              - Show version information and quit.\n"
           "\t--help, -h                 - Show help and quit.\n"
-          "\nPlease send bug reports/help to hypsurus@mail.ru\n"
-          "License GPLv2: GNU GPL version 2 or later <http://gnu.org/licenses/gpl.html>.\n");
+          "\nPlease send bug reports/help to "PACKAGE_BUGREPORT
+          "\nLicense GPLv2: GNU GPL version 2 or later <http://gnu.org/licenses/gpl.html>.\n");
     exit(ex);
 }
 
 void print_startup(ftpmap_t *ftpmap) {
     /*printf("%s", ftpmap_ascii);*/
-    logger_write(ftpmap, ":: Starting FTP-Map %s - Scanning (%s:%s)...\n", VERSION, ftpmap->ip_addr, ftpmap->port);
+    logger_write(1,ftpmap, "\n:: Starting FTP-Map %s - Scanning (%s:%s)...\n", VERSION, ftpmap->ip_addr, ftpmap->port);
 }
 
 char * ftpmap_getanswer(ftpmap_t *ftpmap) {
     static char answer[MAX_ANSWER];
+    char buffer[MAX_STR];
     char *s = NULL;
     signal(SIGALRM, sigalrm);
     alarm(5);
 
     if ( !ftpmap->fid )
-        die(1, "cannot to read data.");
-    while ((fgets(answer, sizeof answer, ftpmap->fid)) > 0 ) {
+        die(1, "Cannont read data\n");
+
+    while ((fgets(answer, sizeof(answer), ftpmap->fid)) > 0 ) {
         if (strtol(answer, &s, 10) != 0 && s != NULL) {
             if (isspace(*s)) {
                 return answer;
@@ -127,59 +133,61 @@ char * ftpmap_getanswer_long(FILE *fd, ftpmap_t *ftpmap) {
 void ftpmap_detect_version_by_banner(ftpmap_t *ftpmap, detect_t *detect) {
     const char **ptr = NULL;
 
-    logger_write(ftpmap,":: Trying to detect FTP server by banner...\n");
+    logger_write(1,ftpmap,":: Trying to detect FTP server by banner...\n");
     sprintf(ftpmap->unsoftware, "%s%s", detect->software, detect->version);
 
     for ( ptr = versions; *ptr; ptr++ ) {
         if ( ! strcasecmp(ftpmap->unsoftware, *ptr)) {
-            logger_write(ftpmap,":: FTP server running: %s\n", *ptr);
-            logger_write(ftpmap,":: No need to generate fingerprint. (use -F to disable this)\n");
+            logger_write(1,ftpmap,":> FTP server running: %s\n", *ptr);
+            logger_write(1,ftpmap,":: No need to generate fingerprint. (use -F to disable this)\n");
             ftpmap->versiondetected = 1;
             ftpmap->skipfingerprint = 1;
             break;
         }
+        else
+            ftpmap->versiondetected = 0;
     }
 }
 
 int ftpmap_login(ftpmap_t *ftpmap, detect_t *detect, int v) {
-    
-    ftpmap->answer = ftpmap_getanswer(ftpmap);
+    char *answer = NULL;
+    answer = ftpmap_getanswer(ftpmap);
     if ( v )
-        logger_write(ftpmap,":: FTP Banner: %s", ftpmap->answer);
-    sscanf(ftpmap->answer, "220 %s %s", detect->software, detect->version);
+        logger_write(1,ftpmap,":: FTP Banner: %s", answer);
+    sscanf(answer, "220 %s %s", detect->software, detect->version);
     if ( v )
-        logger_write(ftpmap,":: Trying to login with: %s:%s\n", ftpmap->user, ftpmap->password);
+        logger_write(1,ftpmap,":: Trying to login with: %s:%s\n", ftpmap->user, ftpmap->password);
 
     fprintf(ftpmap->fid, "USER %s\r\n",ftpmap->user);
-    ftpmap->answer = ftpmap_getanswer(ftpmap);
+    answer = ftpmap_getanswer(ftpmap);
 
-    if ( ftpmap->answer == 0 )
+    if ( answer == 0 )
         ftpmap_reconnect(ftpmap,1);
 
-    if ( *ftpmap->answer == '2' )
+    if ( *answer == '2' )
         return 0;
     
     fprintf(ftpmap->fid, "PASS %s\r\n",ftpmap->password);
-    ftpmap->answer = ftpmap_getanswer(ftpmap);  
+    answer = ftpmap_getanswer(ftpmap);  
 
-    if ( ftpmap->answer == 0 )
+    if ( answer == 0 )
         ftpmap_reconnect(ftpmap,1);
 
-    if ( *ftpmap->answer == '2' ) {
+    if ( *answer == '2' ) {
         if ( v ) {
-            logger_write(ftpmap,":: %s", ftpmap->answer);
+            logger_write(1,ftpmap,":: %s", answer);
         }
         else {
-            printf(":: %s", ftpmap->answer); 
+            printf(":: %s", answer); 
         }
         return 0;
     }
 
     if ( v ) {
-        logger_write(ftpmap,":: %s", ftpmap->answer);
+        logger_write(1,ftpmap,":: %s", answer);
     }
     else if ( v ){
-        printf(":: %s", ftpmap->answer); 
+        printf(":: %s", answer); 
     }
     return -1;
 }
@@ -187,56 +195,47 @@ int ftpmap_login(ftpmap_t *ftpmap, detect_t *detect, int v) {
 void ftpmap_findexploit(ftpmap_t *ftpmap, detect_t *detect, exploit_t *exploit) {
     const char **ptr = NULL;
     int cexploit = 0;
+    int state = 0;
 
     if ( detect->fisoftware )
         sscanf(detect->fisoftware, "%s %s", detect->fsoftware, detect->fversion);
 
-    logger_write(ftpmap,":: Searching exploits...\n");
+    logger_write(1,ftpmap,":: Searching exploits...\n");
+
+    state = ftpmap->versiondetected ? ftpmap->versiondetected : ftpmap->fingerprinthasmatch;
 
     for ( ptr = exploits; *ptr; ptr++ ) {
         sscanf(*ptr, "%d %[^\n]s", &exploit->id, exploit->exploit);
-
-        if ( ftpmap->versiondetected ) {
-            /* First search exploits by banner */
-            if ( strcasestr(exploit->exploit, detect->software) && strcasestr(exploit->exploit, detect->version)) {
-                ftpmap_draw(0x2d, strlen(exploit->exploit));
-                logger_write(ftpmap,"|%8s|\n", exploit->exploit);
-                ftpmap_draw(0x2d, strlen(exploit->exploit));
-                logger_write(ftpmap,"|http://exploit-db.com/download/%d|\n", exploit->id); 
-                ftpmap_draw(0x2d, 35);
-                putchar(0x0a);
-                cexploit++;
-            }
-        }
-
-        else if ( ftpmap->fingerprinthasmatch ) {
-            /* Second search exploit by fingerprint */
-            if ( strcasestr(exploit->exploit,detect->fsoftware) && strcasestr(exploit->exploit,detect->fversion)) { 
-                ftpmap_draw(0x2d, strlen(exploit->exploit));
-                logger_write(ftpmap,"|%8s|\n", exploit->exploit);
-                ftpmap_draw(0x2d, strlen(exploit->exploit));
-                logger_write(ftpmap,"|http://exploit-db.com/download/%d|\n", exploit->id); 
-                ftpmap_draw(0x2d, 35);
-                putchar(0x0a);
-                cexploit++;
-            }
-        }
-        /* Final check if there is exploit */
-        else if ( !ftpmap->versiondetected || ! ftpmap->fingerprinthasmatch ) {
-            if ( strcasestr(exploit->exploit, detect->software) && strcasestr(exploit->exploit, detect->version)) {
-                ftpmap_draw(0x2d, strlen(exploit->exploit));
-                logger_write(ftpmap,"|%8s|\n", exploit->exploit);
-                ftpmap_draw(0x2d, strlen(exploit->exploit));
-                logger_write(ftpmap,"|http://exploit-db.com/download/%d|\n", exploit->id); 
-                ftpmap_draw(0x2d, 35);
-                putchar(0x0a);
-                cexploit++;
-            }
+        switch(state) {
+            case 1:
+                if ( strcasestr(exploit->exploit, detect->software) && strcasestr(exploit->exploit, detect->version)) {
+                    ftpmap_draw_extable(ftpmap,exploit->id, exploit->exploit);
+                    cexploit++;
+                }
+                break;
+            case 2:
+                if ( strcasestr(exploit->exploit, detect->software) && strcasestr(exploit->exploit, detect->version)) {
+                    ftpmap_draw_extable(ftpmap,exploit->id, exploit->exploit);
+                    cexploit++;
+                }
+                break;
+            case 0:
+                if ( strcasestr(exploit->exploit, detect->software) && strcasestr(exploit->exploit, detect->version)) {
+                    if ( atoi(detect->version) == 0 || atof(detect->version) == 0 ) {
+                        printf(":: FTP detected version is not float or int.\n");
+                        return;
+                    }
+                    ftpmap_draw_extable(ftpmap,exploit->id, exploit->exploit);
+                    cexploit++;
+                }
+                break;
         }
     }
 
     if ( cexploit == 0 )
-        logger_write(ftpmap,":: FTP-Map didn't find any exploits for %s\n", ftpmap->server);
+        logger_write(1,ftpmap,":: FTP-Map didn't find any exploits for %s\n", ftpmap->server);
+    else
+        logger_write(1,ftpmap,":: FTP-Map found: %d exploits for %s\n", cexploit, ftpmap->server);
 }
 
 int ftpmap_updatestats(const unsigned long sum, int testnb) {
@@ -285,7 +284,7 @@ int ftpmap_findseq(ftpmap_t *ftpmap) {
         answer = ftpmap_getanswer(ftpmap);
         if (*answer != '2') {
             noseq:                        
-            logger_write(ftpmap,":: Unable to determine FTP port sequence numbers\n");
+            logger_write(1,ftpmap,":: Unable to determine FTP port sequence numbers\n");
             return -1;
         }
         while (*answer != 0 && *answer != '(') {
@@ -301,10 +300,10 @@ int ftpmap_findseq(ftpmap_t *ftpmap) {
         port[n] = e * 256U + f;
         n++;
     } while (n < (sizeof port / sizeof port[0]));
-    logger_write(ftpmap,":: FTP port sequence numbers : \n");
+    logger_write(1,ftpmap,":: FTP port sequence numbers : \n");
     n = 0;
     do {
-        logger_write(ftpmap,":: %u, ", port[n]);
+        logger_write(1,ftpmap,":: %u, ", port[n]);
         if (n != 0) {
             portdif = (long) port[n] - (long) port[n - 1];
             if (portdif < 0L) {
@@ -326,10 +325,10 @@ int ftpmap_findseq(ftpmap_t *ftpmap) {
         n++;
     } while (n < (sizeof port / sizeof port[0]));
     if (timedep > 2) {
-        logger_write(ftpmap,"\t::: POSSIBLE TRIVIAL TIME DEPENDENCY - INSECURE :::\n");
+        logger_write(1,ftpmap,"\t::: POSSIBLE TRIVIAL TIME DEPENDENCY - INSECURE :::\n");
     }
     dif /= (sizeof port / sizeof port[0] - 1);
-    logger_write(ftpmap,"\n:: Difficulty = %llu (%s)\n", dif, seqidx2difficultystr(dif));
+    logger_write(1,ftpmap,"\n:: Difficulty = %llu (%s)\n", dif, seqidx2difficultystr(dif));
     return 0;
 }
 
@@ -350,7 +349,7 @@ int ftpmap_findwinner(ftpmap_t *ftpmap, detect_t *detect) {
     double max,maxerr;
     const char *olds = NULL;
 
-    logger_write(ftpmap,":: This may be running :\n\n");
+    logger_write(1,ftpmap,":: This may be running :\n\n");
     qsort(fingerprints, sizeof fingerprints / sizeof fingerprints[0],
           sizeof fingerprints[0], ftpmap_compar);
     maxerr = (double) fingerprints[nb - 1].err;
@@ -360,13 +359,13 @@ int ftpmap_findwinner(ftpmap_t *ftpmap, detect_t *detect) {
         if (olds == NULL || strcasecmp(olds, f->software) != 0) {
             olds = f->software;
             ftpmap_draw(0x2d, 30);
-            logger_write(ftpmap,"%d) %s - %.2g%%\n", nrep+1, f->software, max);
+            logger_write(1,ftpmap,"%d) %s - %.2g%%\n", nrep+1, f->software, max);
             nrep++;            
         }
         if ( nrep == 1 )
             sprintf(detect->fisoftware, "%s", f->software);
-        if ( max <= 7.0 && nrep == 1 )
-            ftpmap->fingerprinthasmatch = 1;
+        if ( max <= 0.40 && nrep == 1 )
+            ftpmap->fingerprinthasmatch = 2;
         if (nrep > 2) {
             break;
         }
@@ -392,20 +391,13 @@ int ftpmap_fingerprint(ftpmap_t *ftpmap, detect_t *detect) {
     const char **cmd;
     unsigned long sum;
     int testnb = 0, progress = 0, max = 0;
-    FILE *fp;
-    char filename[MAX_STR];
 
-    sprintf(filename, "%s-fingerprint.log", ftpmap->ip_addr);
-
-    if (( fp = fopen(filename, "w+")) == NULL )
-        die(1, "Failed to write fingerprint log file.");
-
-    logger_write(ftpmap,":: Trying to detect FTP server by fingerprint...\n");
+    logger_write(1,ftpmap,":: Trying to detect FTP server by fingerprint...\n");
     cmd = testcmds;
     max = 141;
 
-    fprintf(fp, "# Generated by FTP-Map\n# Please send this fingerprint to hypsurus@mail.ru with the name of the server and version.\n\n\n# Fingerprint:\n\n");
-    fprintf(fp, "{\n\t0UL, \"%s %s\",{\n", detect->software, detect->version);
+    logger_write(0, ftpmap, "\n# Fingerprint:\n\n");
+    logger_write(0, ftpmap, "{\n\t0UL, \"%s %s\",{\n", detect->software, detect->version);
     while (*cmd != NULL) {
         fprintf(ftpmap->fid, "%s\r\n", *cmd);
         fflush(ftpmap->fid);
@@ -417,16 +409,14 @@ int ftpmap_fingerprint(ftpmap_t *ftpmap, detect_t *detect) {
         }
 
         printf(":: Generating fingerprint [%d%%]\r", progress * 100 / max );
-        fprintf(fp, "%lu,", sum);
         fflush(stdout);
+        logger_write(0, ftpmap, "%lu,", sum);
         ftpmap_updatestats(sum, testnb);
         testnb++;                    
         cmd++;
         progress++;
     }
-    fprintf(fp, "\n\t}\n},");
-    logger_write(ftpmap,":: Fingerprint saved: %s\n", filename);
-    fclose(fp);
+    logger_write(0, ftpmap, "\n\t}\n},\n");
     putchar(0x0a);
     return 0;
 }
@@ -436,12 +426,12 @@ void ftpmap_sendcmd(ftpmap_t *ftpmap) {
     const char **lptr = NULL;
     int shorto = 1;
 
-    logger_write(ftpmap,":: Sending cmd: %s.\n", ftpmap->cmd);
+    logger_write(1,ftpmap,":: Sending cmd: %s.\n", ftpmap->cmd);
     fprintf(ftpmap->fid, "%s\r\n", ftpmap->cmd);
 
     for ( lptr = long_output_cmds; *lptr; lptr++ ) {
         if ( strcasecmp(*lptr, ftpmap->cmd) == 0 ) {
-           logger_write(ftpmap,"::: Retrieving data for %s...\n\n", ftpmap->cmd);
+           logger_write(1,ftpmap,"::: Retrieving data for %s...\n\n", ftpmap->cmd);
             answer = ftpmap_getanswer_long(ftpmap->fid, ftpmap);
             shorto = 0;
             break;
@@ -450,7 +440,7 @@ void ftpmap_sendcmd(ftpmap_t *ftpmap) {
     }
     if ( shorto )
         answer = ftpmap_getanswer(ftpmap);
-    logger_write(ftpmap,"%s", answer);
+    logger_write(1,ftpmap,"%s", answer);
 }
 
 void ftpmap_calc_data_port(ftpmap_t *ftpmap) {
@@ -464,7 +454,7 @@ void ftpmap_calc_data_port(ftpmap_t *ftpmap) {
    
     /* Not logged in or worng command*/
     if ( *answer == '5' ) {
-        logger_write(ftpmap,"%s", answer);
+        logger_write(1,ftpmap,"%s", answer);
         return;
     }
     
@@ -472,6 +462,55 @@ void ftpmap_calc_data_port(ftpmap_t *ftpmap) {
     sscanf(str, " (%d,%d,%d,%d,%d,%d)", &h1,&h2,&h3,&h4,&p1,&p2);
     /*h1.h2.h3.h4 - the server IP address*/
     ftpmap->dataport = p1*256+p2;
+}
+
+void ftpmap_get_systemtype(ftpmap_t *ftpmap) {
+    char *answer = NULL;
+
+    fprintf(ftpmap->fid, "SYST\r\n");
+    answer = ftpmap_getanswer(ftpmap);
+
+    if ( *answer == '5' ) 
+        logger_write(1,ftpmap, ":: SYST command failed.\n");
+    else
+        logger_write(1,ftpmap, ":> System type (OS) : %s", answer+4);
+}
+
+void ftpmap_scanlist(ftpmap_t *ftpmap, detect_t *detect, exploit_t *exploit) {
+    char buffer[MAX_STR];
+    FILE *fp;
+
+    if (( fp = fopen(ftpmap->path, "r")) == NULL )
+        die(1, "Failed to read: %s\n", ftpmap->path);
+
+    while ( fgets(buffer, sizeof(buffer), fp)) {
+        if ( buffer ) {
+            ftpmap->server = strtok(buffer, "\n");
+            ftpmap_scan(ftpmap, detect, exploit, 1);
+        }
+        bzero(buffer, 0);
+    }
+
+    fclose(fp);
+}
+
+void ftpmap_scan(ftpmap_t *ftpmap, detect_t *detect, exploit_t *exploit, int override) {
+    ftpmap_reconnect(ftpmap, 0);
+    logger_open(ftpmap, override); 
+    print_startup(ftpmap);
+    ftpmap_login(ftpmap, detect, 1);
+    ftpmap_get_systemtype(ftpmap);
+    ftpmap_detect_version_by_banner(ftpmap,detect);
+    if ( ftpmap->skipfingerprint == 0 || ftpmap->forcefingerprint ) {
+        ftpmap_fingerprint(ftpmap, detect);
+        ftpmap_findwinner(ftpmap,detect);
+    }
+    ftpmap_findexploit(ftpmap,detect,exploit);
+    ftpmap_findseq(ftpmap);
+    printf("\n:: Scan for: %s completed ::\n", ftpmap->ip_addr);
+    printf(":: Please send the fingerprint to hypsurus@mail.ru to improve FTP-Map.\n\n");  
+    if ( ftpmap->nolog == 0 )
+        logger_close(ftpmap);
 }
 
 int main(int argc, char **argv) {
@@ -501,18 +540,21 @@ int main(int argc, char **argv) {
         {"delete", required_argument, 0, 'D'},
         {"log", no_argument, 0, 'g'},
         {"size", required_argument, 0, 'z'},
+        {"cat", required_argument, 0, 'c'},
+        {"list", required_argument, 0, 'L'},
         {"help", no_argument, 0, 'h'},
         {"version", no_argument, 0, 'v'},
     };
 
-    while (( opt = getopt_long(argc, argv, "s:P:u:p:x:fl:hvo:D:m:Sd:U:gz:", 
+    while (( opt = getopt_long(argc, argv, "s:P:u:p:x:fl:hvo:D:m:Sd:U:gz:c:L:n", 
                     long_options, &long_index)) != -1 ) {
+            misc_check(optarg);
             switch(opt) {
                 case 's':
-                        ftpmap->server = strdup(optarg);
+                        ftpmap->server = optarg;
                         break;
                 case 'S':
-                        action = 99;
+                        action = 10;
                         break;
                 case 'P':
                         ftpmap->port = strdup(optarg);
@@ -560,8 +602,16 @@ int main(int argc, char **argv) {
                         ftpmap->path = strdup(optarg);
                         action = 6;
                         break;
+                case 'c':
+                        ftpmap->path = strdup(optarg);
+                        action = 8;
+                        break;
                 case 'g':
                         ftpmap->nolog = 0;
+                        break;
+                case 'L':
+                        ftpmap->path = strdup(optarg);
+                        action = 9;
                         break;
                 case 'h':
                         print_usage(0);
@@ -572,22 +622,18 @@ int main(int argc, char **argv) {
              }
         }
     
-    if ( ftpmap->server == NULL ) {
+    if ( ftpmap->server == NULL && action <= 8 ) {
         printf("Error: Please tell me what server has to be probed (-s <host>)\n\n");
         print_usage(1);
     }
+    else if ( ftpmap->server && action == 9 )
+        die(1,"Error: you cannont use -s with -L\n");
 
-
-    if ( action == 99 ) {
-        goto scan;
-    }
-
-    else if ( action ) {
+    else if ( action <= 8 ) {
         ftpmap_reconnect(ftpmap, 0);
-        logger_open(ftpmap);
+        logger_open(ftpmap, 0);
         ftpmap_login(ftpmap, detect, 0);
-    } else
-        die(1, "Please select action.");
+    } 
 
     switch(action) {
         case 1:
@@ -609,29 +655,21 @@ int main(int argc, char **argv) {
             ftpmap_upload(ftpmap);
             goto end;
         case 7:
-            logger_write(ftpmap, "%s\n", calc_bytes_size(ftpmap_fsize(ftpmap)));
+            logger_write(1,ftpmap, "%s\n", calc_bytes_size(ftpmap_fsize(ftpmap)));
+            goto end;
+        case 8:
+            ftpmap_cat(ftpmap);
+            goto end;
+        case 9:
+            ftpmap_scanlist(ftpmap, detect, exploit);
+            goto end;
+        case 10:
+            ftpmap_scan(ftpmap, detect, exploit, 0);
             goto end;
             
     }
 
-    scan:
-        ftpmap_reconnect(ftpmap, 0);
-        logger_open(ftpmap); 
-        print_startup(ftpmap);
-        ftpmap_login(ftpmap, detect, 1);
-        ftpmap_detect_version_by_banner(ftpmap,detect);
-        if ( ftpmap->skipfingerprint == 0 || ftpmap->forcefingerprint ) {
-            ftpmap_fingerprint(ftpmap, detect);
-            ftpmap_findwinner(ftpmap,detect);
-        }
-        ftpmap_findexploit(ftpmap,detect,exploit);
-        ftpmap_findseq(ftpmap);
-        printf("\n:: Scan for: %s completed ::\n", ftpmap->ip_addr);
-        printf(":: Please send the fingerprint to hypsurus@mail.ru to improve FTP-Map.\n\n");  
-        if ( ftpmap->nolog == 0 )
-            logger_close(ftpmap);
- 
-    end:
+   end:
         ftpmap_end(ftpmap, detect, exploit);
     
     return 0;

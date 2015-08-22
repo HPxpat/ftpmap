@@ -56,3 +56,10 @@
     bug fixes.
     new tool updatexploits.sh.
 
+* Version 0.13:
+    --cat option for printing files without downloading them.
+    --list option for scanning multiple hosts.
+    segfault fixes.
+    ftpmap_findexploit changed.
+    scan_mode moved to functions.
+ 

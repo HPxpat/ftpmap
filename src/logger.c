@@ -20,20 +20,23 @@
 #include "logger.h"
 #include "misc.h"
 
-void logger_open(ftpmap_t *ftpmap) {
+void logger_open(ftpmap_t *ftpmap, int override) {
     char filename[MAX_STR];
-    sprintf(filename, "%s.log", ftpmap->server);
+    if ( override )
+        sprintf(filename, "ftpmap_hosts_scan.log");
+    else
+        sprintf(filename, "ftpmap_%s.log", ftpmap->server);
 
     if ( ftpmap->loggerfile == NULL )
         ftpmap->loggerfile = strdup(filename);
 
     if ( ftpmap->nolog == 0 ) {
-        if (( ftpmap->loggerfp = fopen(ftpmap->loggerfile, "w+")) == NULL )
+        if (( ftpmap->loggerfp = fopen(ftpmap->loggerfile, "a")) == NULL )
             die(1, "Unable to write log file: %s", ftpmap->loggerfile);
     }
 }
 
-void logger_write(ftpmap_t *ftpmap, char *format, ...) {
+void logger_write(int std, ftpmap_t *ftpmap, char *format, ...) {
     va_list li;
     char s[MAX_STR];
 
@@ -41,10 +44,10 @@ void logger_write(ftpmap_t *ftpmap, char *format, ...) {
     vsprintf(s, format, li);
     va_end(li);
 
-    printf("%s", s);
     if ( ftpmap->nolog == 0 )
         fprintf(ftpmap->loggerfp, "%s", s);
-
+    if ( std )
+        printf("%s", s);
 }
 
 void logger_close(ftpmap_t *ftpmap) {

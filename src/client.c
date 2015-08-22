@@ -51,6 +51,32 @@ long int ftpmap_fsize(ftpmap_t *ftpmap) {
     return size;
 }
 
+void ftpmap_cat(ftpmap_t *ftpmap) {
+    int fsize = ftpmap_fsize(ftpmap);
+    int rsize = 0;
+    FILE *fd;
+    char *answer = NULL;
+    char buffer[MAX_STR];
+
+    fd = ftpmap_data_tunnel(ftpmap, "r");
+
+    fprintf(ftpmap->fid, "TYPE I\r\n");
+    answer = ftpmap_getanswer(ftpmap);
+    if ( *answer == 0 )
+        return;
+
+    fprintf(ftpmap->fid, "RETR %s\r\n", ftpmap->path);
+    answer = ftpmap_getanswer(ftpmap);
+
+    if ( *answer == 0 )
+        return;
+    printf(":-: %s", answer);
+    while (( rsize = fread(buffer, 1, sizeof(buffer), fd)) > 0 ) {
+        printf("%s", buffer);
+   }
+}
+
+
 void ftpmap_download(ftpmap_t *ftpmap) {
     int fsize = ftpmap_fsize(ftpmap);
     int dsize = 0, rsize = 0;
@@ -76,7 +102,7 @@ void ftpmap_download(ftpmap_t *ftpmap) {
 
     if ( *answer == 0 )
         return;
-    logger_write(ftpmap, ":-: %s", answer);
+    logger_write(1,ftpmap, ":-: %s", answer);
     while (( rsize = fread(buffer, 1, sizeof(buffer), fd)) > 0 ) {
          if ( buffer[rsize +1] == '\r' )
             buffer[rsize +1] = '\0';
@@ -120,7 +146,7 @@ void ftpmap_upload(ftpmap_t *ftpmap) {
     if ( *answer == 0 )
         return;
 
-    logger_write(ftpmap, ":-: %s", answer);
+    logger_write(1,ftpmap, ":-: %s", answer);
     while (( rsize = fread(buffer, 1, sizeof(buffer), lfp)) > 0 ) {
         if ( buffer[rsize +1 ] == '\r' ) 
             buffer[rsize + 1] = '\0';

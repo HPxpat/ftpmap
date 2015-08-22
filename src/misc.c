@@ -18,6 +18,7 @@
 
 
 #include "misc.h"
+#include "logger.h"
 
 char * calc_bytes_size(int size) {
     float KB = 1024;
@@ -50,6 +51,17 @@ char * fret(char *format, ...) {
     return ret;
 }
 
+void misc_check(char *buffer) {
+    int i = 0;
+    
+    if ( buffer ) {
+        for ( i = 0; buffer[i] != 0;i++ ) {
+            if ( i >= MAX_STR-6 )
+                die(1, "You cannont pass this string.\n");
+        }
+    }
+}
+
 void die(int stat, char *format, ...) {
         va_list li;
         char m[MAX_STR];
@@ -59,7 +71,7 @@ void die(int stat, char *format, ...) {
         va_end(li);
 
         if ( stat == 1 ) {
-            fprintf(stderr, "[ERROR] %s\n", m);
+            fprintf(stderr, "Error: %s", m);
             exit(EXIT_FAILURE);
         }
 }
@@ -74,16 +86,15 @@ void ftpmap_draw(int ch, int times) {
     printf("+\n");
 }
 
-void ftpmap_genchars(int ch, char *buffer, int length) {
-    int i = 0;
-   
-    /* make */
-    if ( length > 5000 )
-        die(1,"Fuzzer buffer length is too long. ( > 5000)\n");
-    for ( i = 0; i <= length; i++ ) {
-        buffer[i] = ch;
-    }
+void ftpmap_draw_extable(ftpmap_t *ftpmap, int id, char *exploit) {
+        ftpmap_draw(0x2d, strlen(exploit));
+        logger_write(1, ftpmap,"|%8s|\n", exploit);
+        ftpmap_draw(0x2d, strlen(exploit));
+        logger_write(1,ftpmap,"|http://exploit-db.com/download/%d|\n", id); 
+        ftpmap_draw(0x2d, 35);
+        putchar(0x0a);
 }
+
 
 void * xmalloc(size_t size) {
     void *ret = malloc(size);

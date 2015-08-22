@@ -4,8 +4,18 @@ FTP-Map
 Developer notes
 ================
 
-* In this version (0.12) FTP-Map has support for downloading/uploading a single file from FTP Servers.
-* The auto log function has been removed from version 0.12 (to use it run FTP-Map with -g)
+* FTPMap 0.13 (the current version), is the best version so far.
+
+1. The --cat option for printing files (usually text files), without downloading them.
+2. The --list option for scanning multiple FTP servers from txt file (user request).
+3. Lots!! bugs has been fixed!
+4. now to save the fingerprint you need to use the -g option.
+
+#### For release 1.0 we need TODO:
+
+* Testing if FTPMap is stable .
+* Adding more fingerprints.
+* security check. (overflows, etc..)
 
 <p> FTPMap should work on ( As far I know): </p>
 
@@ -15,6 +25,13 @@ Developer notes
 * Mac? (I didn't test)
 * Windows (Cygwin?)
 
+###### For any question/help, you can reach me in: [@Hypsurs](https://twitter.com/Hypsurs)
+
+#### FTP-Map is open source and free, Please help me with:
+
+* Send bug reports.
+* Code!, we need more featuers.
+* More fingerprints!
 
 About
 =====
@@ -39,7 +56,10 @@ Usage
 
 
 * Scan server:
-    > ftpmap -s localhost -S -g
+    > ftpmap -Sgs localhost
+
+* Scan multiple FTP servers:
+    > ftpmap -gL list.txt
 
 * Upload a file.
     > ftpmap -s localhost --user root --password root -U 'topsecretfile.txt'
