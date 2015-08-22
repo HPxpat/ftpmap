@@ -32,7 +32,7 @@ int ftpmap_reconnect(ftpmap_t *ftpmap, int ex) {
 
     if (( getaddrinfo(ftpmap->server, ftpmap->port, &ai, &srv)) != 0 ) {
         if ( ex == 1 )
-            die(1, "Connection failed.");
+            die(1, "Connection failed.\n");
         return -1;
     }
 
@@ -46,13 +46,13 @@ int ftpmap_reconnect(ftpmap_t *ftpmap, int ex) {
     if (( fd = socket(ai.ai_family, ai.ai_socktype, 
                     ai.ai_protocol)) < 0 ) {
         if ( ex == 1 ) 
-            die(1, "Failed to create a new socket.");
+            die(1, "Failed to create a new socket.\n");
         return -1;
     }
 
     if ( connect(fd, p->ai_addr, p->ai_addrlen) < 0 ) {
         if ( ex == 1)
-            die(1, "Failed to connect");
+            die(1, "Failed to connect\n");
         return -1;
     }
 
@@ -68,7 +68,7 @@ FILE * ftpmap_data_tunnel(ftpmap_t *ftpmap, char *mode) {
     struct sockaddr_in s;
 
     if (( dfd = socket(AF_INET, SOCK_STREAM, 0)) < 0 )
-        die(1, "data_tunnel: Failed to create socket.");
+        die(1, "data_tunnel: Failed to create socket.\n");
 
     ftpmap_calc_data_port(ftpmap); 
     /* s.sin_family = AF_UNSPEC */
@@ -77,7 +77,7 @@ FILE * ftpmap_data_tunnel(ftpmap_t *ftpmap, char *mode) {
     s.sin_addr.s_addr = inet_addr(ftpmap->ip_addr);
 
     if (( connect(dfd, (struct sockaddr *)&s, sizeof s)) < 0 )
-        die(1, "data_tunnel: Failed to connect.");
+        die(1, "data_tunnel: Failed to connect.\n");
 
     return (fdopen(dfd, mode));
 }

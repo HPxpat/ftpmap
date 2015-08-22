@@ -88,7 +88,7 @@ void ftpmap_download(ftpmap_t *ftpmap) {
     filename =  (strrchr(ftpmap->path, '/'))+1;
 
     if (( file = fopen(filename, "w")) == NULL )
-        die(1, "Failed to write %s.", ftpmap->path);
+        die(1, "Failed to write %s.\n", ftpmap->path);
 
     fd = ftpmap_data_tunnel(ftpmap, "r");
 
@@ -128,7 +128,7 @@ void ftpmap_upload(ftpmap_t *ftpmap) {
     else
         filename = ftpmap->path;
     if (( lfp = fopen(ftpmap->path, "rb")) == NULL )
-        die(1, "Failed to read \'%s\' ...", ftpmap->path);
+        die(1, "Failed to read \'%s\' ...\n", ftpmap->path);
 
     fseek(lfp, 0L, SEEK_END);
     fsize += (int)ftell(lfp);

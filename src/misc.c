@@ -100,7 +100,7 @@ void * xmalloc(size_t size) {
     void *ret = malloc(size);
 
     if ( !ret && size )
-        die(1, "Failed to allocate: %zu bytes.", size);
+        die(1, "Failed to allocate: %zu bytes.\n", size);
 
     return ret;
 }

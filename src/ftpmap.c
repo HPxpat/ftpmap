@@ -118,7 +118,7 @@ char * ftpmap_getanswer_long(FILE *fd, ftpmap_t *ftpmap) {
     alarm(5);
  
     if ( ! ftpmap->fid )
-        die(1, "cannot to read data.");
+        die(1, "cannot read data.\n");
     while (fgets(answer, sizeof answer, fd) != NULL) {
         strncat(ret, answer, strlen(answer));  
     }
