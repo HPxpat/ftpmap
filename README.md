@@ -17,7 +17,7 @@ Developer notes
 * Adding more fingerprints.
 * security check. (overflows, etc..)
 
-<p> FTPMap should work on ( As far I know): </p>
+#### FTPMap should work on ( As far I know): 
 
 * linux (Arch, Debian, Fedora etc..) 100%
 * ARM (RaspberryPi, Android etc..). 100%
@@ -25,7 +25,7 @@ Developer notes
 * Mac? (I didn't test)
 * Windows (Cygwin?)
 
-###### For any question/help, you can reach me in: [@Hypsurs](https://twitter.com/Hypsurs)
+###### For any question/help, you can reach me in: [@Hypsurus](https://twitter.com/Hypsurus)
 
 #### FTP-Map is open source and free, Please help me with:
 
