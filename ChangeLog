@@ -62,4 +62,9 @@
     segfault fixes.
     ftpmap_findexploit changed.
     scan_mode moved to functions.
- 
+
+* Version 0.14:
+    new scan function brute (brute force user root)
+    bug fixes 
+    --cat changed to ASCII mode (I)
+    

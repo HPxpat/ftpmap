@@ -4,12 +4,9 @@ FTP-Map
 Developer notes
 ================
 
-* FTPMap 0.13 (the current version), is the best version so far.
+* FTPMap 0.14 
 
-1. The --cat option for printing files (usually text files), without downloading them.
-2. The --list option for scanning multiple FTP servers from txt file (user request).
-3. Lots!! bugs has been fixed!
-4. now to save the fingerprint you need to use the -g option.
+1. added brute force function for user root 
 
 #### For release 1.0 we need TODO:
 

@@ -28,8 +28,6 @@
 #include "logger.h"
 #include "client.h"
 
-#define DEBUG   1
-
 void ftpmap_init(ftpmap_t *ftpmap) {
     ftpmap->port   = strdup(FTP_DEFAULT_PORT);
     ftpmap->user = strdup(FTP_DEFAULT_USER);
@@ -325,7 +323,7 @@ int ftpmap_findseq(ftpmap_t *ftpmap) {
         n++;
     } while (n < (sizeof port / sizeof port[0]));
     if (timedep > 2) {
-        logger_write(1,ftpmap,"\t::: POSSIBLE TRIVIAL TIME DEPENDENCY - INSECURE :::\n");
+        logger_write(1,ftpmap,"\n::: POSSIBLE TRIVIAL TIME DEPENDENCY - INSECURE :::\n");
     }
     dif /= (sizeof port / sizeof port[0] - 1);
     logger_write(1,ftpmap,"\n:: Difficulty = %llu (%s)\n", dif, seqidx2difficultystr(dif));
@@ -391,16 +389,17 @@ int ftpmap_fingerprint(ftpmap_t *ftpmap, detect_t *detect) {
     const char **cmd;
     unsigned long sum;
     int testnb = 0, progress = 0, max = 0;
+    const char **ptr = NULL;
 
     logger_write(1,ftpmap,":: Trying to detect FTP server by fingerprint...\n");
-    cmd = testcmds;
     max = 141;
 
     logger_write(0, ftpmap, "\n# Fingerprint:\n\n");
     logger_write(0, ftpmap, "{\n\t0UL, \"%s %s\",{\n", detect->software, detect->version);
-    while (*cmd != NULL) {
-        fprintf(ftpmap->fid, "%s\r\n", *cmd);
-        fflush(ftpmap->fid);
+    for ( ptr = testcmds; *ptr;ptr++) {
+        printf(":: Generating fingerprint [%d%%]\r", progress * 100 / max );
+        fflush(stdout);
+        fprintf(ftpmap->fid, "%s\r\n", *ptr);
         answer = ftpmap_getanswer(ftpmap);
         if (answer == NULL) {
             sum = 0UL;
@@ -408,8 +407,6 @@ int ftpmap_fingerprint(ftpmap_t *ftpmap, detect_t *detect) {
             sum = ftpmap_checksum(answer);
         }
 
-        printf(":: Generating fingerprint [%d%%]\r", progress * 100 / max );
-        fflush(stdout);
         logger_write(0, ftpmap, "%lu,", sum);
         ftpmap_updatestats(sum, testnb);
         testnb++;                    
@@ -464,6 +461,42 @@ void ftpmap_calc_data_port(ftpmap_t *ftpmap) {
     ftpmap->dataport = p1*256+p2;
 }
 
+void ftpmap_brute(ftpmap_t *ftpmap) {
+    char *answer = NULL;
+    int f = 0;
+    int index = 0;
+    char *passwords[] = {
+                "root",
+                "ftp",
+                "test",
+                "1234",
+                "12345",
+                "123456",
+                "1234567",
+                "12345678",
+                "123456789",
+                "password"};
+
+
+    logger_write(1,ftpmap,":: Testing user \'root\' for weak passwords..\n");
+
+    for ( index = 0; index <= 9; index++) {
+        ftpmap_reconnect(ftpmap,1);
+        fprintf(stdout,":: Trying password: %s\r", passwords[index]);
+        fflush(stdout);
+        answer = ftpmap_getanswer(ftpmap);
+        fprintf(ftpmap->fid, "USER root\r\n");
+        answer = ftpmap_getanswer(ftpmap);
+        fprintf(ftpmap->fid,"PASS %s\r\n", passwords[index]);
+        answer = ftpmap_getanswer(ftpmap);
+        if ( *answer == '2' ) {
+            logger_write(1, ftpmap,"\n:> Found password: %s\n", passwords[index]);
+            break;
+        }
+        fclose(ftpmap->fid);
+    }
+}
+
 void ftpmap_get_systemtype(ftpmap_t *ftpmap) {
     char *answer = NULL;
 
@@ -506,6 +539,7 @@ void ftpmap_scan(ftpmap_t *ftpmap, detect_t *detect, exploit_t *exploit, int ove
         ftpmap_findwinner(ftpmap,detect);
     }
     ftpmap_findexploit(ftpmap,detect,exploit);
+    ftpmap_brute(ftpmap);
     ftpmap_findseq(ftpmap);
     printf("\n:: Scan for: %s completed ::\n", ftpmap->ip_addr);
     printf(":: Please send the fingerprint to hypsurus@mail.ru to improve FTP-Map.\n\n");  

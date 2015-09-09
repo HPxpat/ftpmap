@@ -9,6 +9,7 @@
 #define GB_PREFIX   "GB"
 #define TB_PREFIX   "TB"
 
+
 /* prototypes */
 void die(int,char*, ...);
 void ftpmap_draw(int,int);

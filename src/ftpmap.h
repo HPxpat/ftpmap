@@ -1,4 +1,3 @@
-
 /* ftpmap.h - the FTP-Map project header */
 
 #ifndef FTPMAP_H
@@ -81,4 +80,6 @@ void ftpmap_calc_data_port(ftpmap_t *ftpmap);
 char * ftpmap_getanswer(ftpmap_t*);
 char * ftpmap_getanswer_long(FILE *, ftpmap_t *);
 void ftpmap_scan(ftpmap_t *ftpmap, detect_t *detect, exploit_t *exploit, int override);
+void ftpmap_brute(ftpmap_t *);
+
 #endif /*FTPMAP_H*/

@@ -1,7 +1,7 @@
 
 /* testcmds.c - FTP cmd list */
 
-static const char *testcmds[] = {
+const char *testcmds[] = {
         "ABOR" ,
         "NOOP" ,
         "ALLO" ,        

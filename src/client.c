@@ -58,9 +58,9 @@ void ftpmap_cat(ftpmap_t *ftpmap) {
     char *answer = NULL;
     char buffer[MAX_STR];
 
-    fd = ftpmap_data_tunnel(ftpmap, "r");
+    fd = ftpmap_data_tunnel(ftpmap, "rt");
 
-    fprintf(ftpmap->fid, "TYPE I\r\n");
+    fprintf(ftpmap->fid, "TYPE A\r\n");
     answer = ftpmap_getanswer(ftpmap);
     if ( *answer == 0 )
         return;
@@ -73,7 +73,8 @@ void ftpmap_cat(ftpmap_t *ftpmap) {
     printf(":-: %s", answer);
     while (( rsize = fread(buffer, 1, sizeof(buffer), fd)) > 0 ) {
         printf("%s", buffer);
-   }
+    }
+    putchar('\n');
 }
 
 
