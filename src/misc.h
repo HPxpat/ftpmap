@@ -17,6 +17,7 @@ void ftpmap_draw_extable(ftpmap_t *,int,char*);
 void ftpmap_genchars(int,char*,int);
 void * xmalloc(size_t);
 void sigalrm(int);
+void sigalint(int);
 void misc_check(char *);
 char * calc_bytes_size(int); 
 char * fret(char *, ...);

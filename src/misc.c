@@ -112,4 +112,9 @@ void sigalrm(int dummy) {
     fd = -1;
 }
 
+void sigalint(int dummy) {
+	(void) dummy;
+	printf("\n:-: %s Interrupt ): ..%s\n", RED,END);
+	exit(1);
+}
 

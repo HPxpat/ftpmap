@@ -26,7 +26,7 @@ void ftpmap_getlist(ftpmap_t *ftpmap) {
     char buffer[MAX_STR];
     char *answer = NULL;
     
-    printf(":: Getting LIST..\n\n");
+    printf(":: Getting %sLIST%s..\n\n", GREEN,END);
     fid = ftpmap_data_tunnel(ftpmap, "r");
     fprintf(ftpmap->fid, "LIST %s\r\n", ftpmap->path);
     answer = ftpmap_getanswer(ftpmap);
@@ -108,8 +108,8 @@ void ftpmap_download(ftpmap_t *ftpmap) {
          if ( buffer[rsize +1] == '\r' )
             buffer[rsize +1] = '\0';
         dsize += fwrite(buffer, 1, rsize, file);
-        printf(":-: Downloading %s %s/%s ...\r",ftpmap->path, dsize ? calc_bytes_size(dsize) : "unknown", 
-                fsize ? calc_bytes_size(fsize) : "unknown");
+        printf(":-: Downloading %s%s%s %s%s%s/%s%s%s ...\r",BLUE,ftpmap->path, END,YELLOW,dsize ? calc_bytes_size(dsize) : "unknown",END,
+						RED,fsize ? calc_bytes_size(fsize) : "unknown",END);
         fflush(stdout);
    }
     printf("\n:-: File saved: %s\n", filename);
@@ -152,8 +152,8 @@ void ftpmap_upload(ftpmap_t *ftpmap) {
         if ( buffer[rsize +1 ] == '\r' ) 
             buffer[rsize + 1] = '\0';
         dsize += fwrite(buffer, 1, rsize, fd);
-        printf(":-: Uploading %s %s/%s bytes...\r", filename, dsize ? calc_bytes_size(dsize) : "unknown", 
-                fsize ? calc_bytes_size(fsize) : "unknown");
+        printf(":-: Uploading %s%s%s %s%s%s/%s%s%s bytes...\r", BLUE,filename,END, YELLOW,dsize ? calc_bytes_size(dsize) : "unknown",END, 
+                RED,fsize ? calc_bytes_size(fsize) : "unknown",END);
         fflush(stdout); 
     }
     printf("\n:-: File \'%s\' Uploaded ...\n", filename);

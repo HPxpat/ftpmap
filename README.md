@@ -6,7 +6,8 @@ Developer notes
 
 * FTPMap 0.14 
 
-1. added brute force function for user root 
+1. Added brute force function for user root 
+2. Added colors
 
 #### For release 1.0 we need TODO:
 
@@ -39,7 +40,7 @@ of the software even when banners have been changed or removed, or when some
 features have been disabled. FTP-Map will try to detect exploits by the  
 FTP software/version.
 
-![FtpMap09](https://pbs.twimg.com/media/CHZpCaoUEAAXCrZ.jpg)
+![FtpMap014](https://pbs.twimg.com/media/COuai7kUwAAFQzI.jpg)
 
 Build
 =====

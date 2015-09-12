@@ -32,6 +32,13 @@
 int fd;
 int dfd;
 
+/* We have colors!! */
+#define RED "\e[31m"
+#define YELLOW "\e[33m"
+#define BLUE "\e[1;34m"
+#define GREEN "\e[32m"
+#define END "\e[0m"
+
 typedef struct {
     FILE *fid;
     FILE *loggerfp;
