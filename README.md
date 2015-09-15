@@ -40,7 +40,7 @@ of the software even when banners have been changed or removed, or when some
 features have been disabled. FTP-Map will try to detect exploits by the  
 FTP software/version.
 
-![FtpMap014](https://pbs.twimg.com/media/COuai7kUwAAFQzI.jpg)
+![FtpMap014](ftpmap014.png)
 
 Build
 =====
