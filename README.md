@@ -1,6 +1,13 @@
 FTP-Map
 ==========
 
+DISCLAIMER
+==========
+
+Usage of FTPMap for attacking targets without prior mutual consent is illegal.
+FTPMap developer (@Hypsurus) not responsible to any damage caused by FTPMap.
+
+
 Developer notes
 ================
 
