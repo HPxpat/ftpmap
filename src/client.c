@@ -28,7 +28,7 @@ void ftpmap_getlist(ftpmap_t *ftpmap) {
     
     printf(":: Getting %sLIST%s..\n\n", GREEN,END);
     fid = ftpmap_data_tunnel(ftpmap, "r");
-    fprintf(ftpmap->fid, "LIST %s\r\n", ftpmap->path);
+    fprintf(gfid, "LIST %s\r\n", ftpmap->path);
     answer = ftpmap_getanswer(ftpmap);
 
     signal(SIGALRM, sigalrm);
@@ -45,7 +45,7 @@ long int ftpmap_fsize(ftpmap_t *ftpmap) {
     long int size = 0;
     char code[MAX_STR];
 
-    fprintf(ftpmap->fid, "SIZE %s\r\n", ftpmap->path); 
+    fprintf(gfid, "SIZE %s\r\n", ftpmap->path); 
     sscanf( ftpmap_getanswer(ftpmap), "%s %d", code, &size);
 
     return size;
@@ -60,12 +60,12 @@ void ftpmap_cat(ftpmap_t *ftpmap) {
 
     fd = ftpmap_data_tunnel(ftpmap, "rt");
 
-    fprintf(ftpmap->fid, "TYPE A\r\n");
+    fprintf(gfid, "TYPE A\r\n");
     answer = ftpmap_getanswer(ftpmap);
     if ( *answer == 0 )
         return;
 
-    fprintf(ftpmap->fid, "RETR %s\r\n", ftpmap->path);
+    fprintf(gfid, "RETR %s\r\n", ftpmap->path);
     answer = ftpmap_getanswer(ftpmap);
 
     if ( *answer == 0 )
@@ -93,12 +93,12 @@ void ftpmap_download(ftpmap_t *ftpmap) {
 
     fd = ftpmap_data_tunnel(ftpmap, "r");
 
-    fprintf(ftpmap->fid, "TYPE I\r\n");
+    fprintf(gfid, "TYPE I\r\n");
     answer = ftpmap_getanswer(ftpmap);
     if ( *answer == 0 )
         return;
 
-    fprintf(ftpmap->fid, "RETR %s\r\n", ftpmap->path);
+    fprintf(gfid, "RETR %s\r\n", ftpmap->path);
     answer = ftpmap_getanswer(ftpmap);
 
     if ( *answer == 0 )
@@ -137,12 +137,12 @@ void ftpmap_upload(ftpmap_t *ftpmap) {
 
     fd = ftpmap_data_tunnel(ftpmap, "w");
     
-    fprintf(ftpmap->fid, "TYPE I\r\n");
+    fprintf(gfid, "TYPE I\r\n");
     answer = ftpmap_getanswer(ftpmap);
     if ( *answer == 0 )
         return;
 
-    fprintf(ftpmap->fid, "STOR %s\r\n", filename);
+    fprintf(gfid, "STOR %s\r\n", filename);
     answer = ftpmap_getanswer(ftpmap);
     if ( *answer == 0 )
         return;
@@ -164,7 +164,7 @@ void ftpmap_upload(ftpmap_t *ftpmap) {
 void ftpmap_delete(ftpmap_t *ftpmap) {
     char *answer = NULL;
 
-    fprintf(ftpmap->fid, "DELE %s\r\n", ftpmap->path);
+    fprintf(gfid, "DELE %s\r\n", ftpmap->path);
     answer = ftpmap_getanswer(ftpmap);
     if ( *answer == 0 )
         return;
@@ -174,7 +174,7 @@ void ftpmap_delete(ftpmap_t *ftpmap) {
 void ftpmap_mdtm(ftpmap_t *ftpmap) {
     char *answer = NULL;
 
-    fprintf(ftpmap->fid, "MDTM %s\r\n", ftpmap->path);
+    fprintf(gfid, "MDTM %s\r\n", ftpmap->path);
     answer = ftpmap_getanswer(ftpmap);
     if ( *answer == 0 )
         return;
