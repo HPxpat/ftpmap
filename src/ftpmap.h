@@ -49,7 +49,6 @@ typedef struct {
     char *user;
     char *password;
     char *cmd;
-    char *loggerfile;
     char *path;
     int dataport;
     /* Flags */

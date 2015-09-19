@@ -22,17 +22,9 @@
 
 void logger_open(ftpmap_t *ftpmap, int override) {
     char filename[MAX_STR];
-    if ( override )
-        sprintf(filename, "ftpmap_hosts_scan.log");
-    else
-        sprintf(filename, "ftpmap_%s.log", ftpmap->server);
-
-    if ( ftpmap->loggerfile == NULL )
-        ftpmap->loggerfile = strdup(filename);
-
     if ( ftpmap->nolog == 0 ) {
-        if (( ftpmap->loggerfp = fopen(ftpmap->loggerfile, "a")) == NULL )
-            die(1, "Unable to write log file: %s", ftpmap->loggerfile);
+        if (( ftpmap->loggerfp = fopen("ftpmap_scan.log", "a")) == NULL )
+            die(1, "Unable to write log file.");
     }
 }
 
@@ -52,5 +44,5 @@ void logger_write(int std, ftpmap_t *ftpmap, char *format, ...) {
 
 void logger_close(ftpmap_t *ftpmap) {
     fclose(ftpmap->loggerfp);
-    fprintf(stdout, ":: Saved log file: %s\n", ftpmap->loggerfile);
+    fprintf(stdout, ":: Saved log file: ftpmap_scan.log\n");
 }

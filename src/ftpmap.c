@@ -62,7 +62,6 @@ void print_usage(int ex) {
           "\t--execute, -x <cmd>        - Run command on the FTP server.\n"
           "\t--nofingerprint, -n        - Do not generate fingerprint.\n"
           "\t--force, -f                - Force to generate fingerprint.\n"
-          "\t--output, -o <file>        - output file for the log file..\n"
           "\t--log, -g                  - Create log file.\n"
           "\t--list, -l <path>          - Get list of files and folders on the FTP server.\n"
           "\t--delete <path>            - Delete files/folders on the server.\n"
@@ -568,7 +567,6 @@ int main(int argc, char **argv) {
         {"upload", required_argument, 0, 'U'},
         {"last-modified", required_argument, 0, 'm'},
         {"force", no_argument, 0, 'f'},
-        {"output", required_argument, 0, 'o'},
         {"nofingerprint", no_argument, 0, 'n'},
         {"list", required_argument, 0, 'l'},
         {"delete", required_argument, 0, 'D'},
@@ -580,7 +578,7 @@ int main(int argc, char **argv) {
         {"version", no_argument, 0, 'v'},
     };
 
-    while (( opt = getopt_long(argc, argv, "s:P:u:p:x:fl:hvo:D:m:Sd:U:gz:c:L:n", 
+    while (( opt = getopt_long(argc, argv, "s:P:u:p:x:fl:hvD:m:Sd:U:gz:c:L:n", 
                     long_options, &long_index)) != -1 ) {
             misc_check(optarg);
             switch(opt) {
@@ -609,9 +607,6 @@ int main(int argc, char **argv) {
                         break;
                 case 'f':
                         ftpmap->forcefingerprint = 1;
-                        break;
-                case 'o':
-                        ftpmap->loggerfile = strdup(optarg);
                         break;
                 case 'n':
                         ftpmap->skipfingerprint = 1;

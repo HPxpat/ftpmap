@@ -37,3 +37,11 @@
 
 # Debug files
 *.dSYM/
+
+# FTP-Map autotools files
+Makefile
+config.status
+src/.deps/
+src/Makefile
+src/ftpmap
+
