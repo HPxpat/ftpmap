@@ -19,7 +19,7 @@
 
 #include "tcp.h"
 
-int ftpmap_reconnect(ftpmap_t *ftpmap, int ex) {
+FILE * ftpmap_reconnect(ftpmap_t *ftpmap, int ex) {
     struct addrinfo ai, *srv = NULL, *p = NULL;
     char hbuf[MAX_STR];
 
@@ -33,7 +33,6 @@ int ftpmap_reconnect(ftpmap_t *ftpmap, int ex) {
     if (( getaddrinfo(ftpmap->server, ftpmap->port, &ai, &srv)) != 0 ) {
         if ( ex == 1 )
             die(1, "Connection failed.\n");
-        return -1;
     }
 
     p = srv;
@@ -47,20 +46,15 @@ int ftpmap_reconnect(ftpmap_t *ftpmap, int ex) {
                     ai.ai_protocol)) < 0 ) {
         if ( ex == 1 ) 
             die(1, "Failed to create a new socket.\n");
-        return -1;
     }
 
     if ( connect(fd, p->ai_addr, p->ai_addrlen) < 0 ) {
         if ( ex == 1)
             die(1, "Failed to connect\n");
-        return -1;
-    }
-
-
-    ftpmap->fid = fdopen(fd, "r+");
+		}
     freeaddrinfo(srv);
     
-    return 1;
+    return (fdopen(fd,"r+"));
 }
 
 FILE * ftpmap_data_tunnel(ftpmap_t *ftpmap, char *mode) {
