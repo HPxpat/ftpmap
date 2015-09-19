@@ -41,7 +41,7 @@ char * calc_bytes_size(int size) {
 }
 
 char * fret(char *format, ...) {
-    char *ret = xmalloc(MAX_STR);
+    static char ret[MAX_STR];
     va_list li;
 
     va_start(li, format);
@@ -94,17 +94,6 @@ void ftpmap_draw_extable(ftpmap_t *ftpmap, int id, char *exploit) {
         ftpmap_draw(0x2d, 35);
         putchar(0x0a);
 }
-
-
-void * xmalloc(size_t size) {
-    void *ret = malloc(size);
-
-    if ( !ret && size )
-        die(1, "Failed to allocate: %zu bytes.\n", size);
-
-    return ret;
-}
-
 
 void sigalrm(int dummy) {
     (void) dummy;
