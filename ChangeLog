@@ -67,4 +67,9 @@
     new scan function brute (brute force user root)
     bug fixes 
     --cat changed to ASCII mode (I)
-    
+
+* Version 0.15:
+		new tool proftpd_versions.py
+		fingerprint engine bug fixed (now the engine can detect fingerprints.)
+		ftpmap->fid removed
+		ftpmap_brute() removed (not needed).

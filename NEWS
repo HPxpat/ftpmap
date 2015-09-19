@@ -44,8 +44,11 @@
     new fingerprints.
     exploits.h updated.
 
-- Version:
+- Version 0.14:
     by default ftpmap will not crate fingerprint file.
     bug fixes.
     the exploit.h NULL line bug fixed.
-
+- Version 1.15:
+		New tool proftpd_versions.py
+		ftpmap->fid removed.
+		fingerprint engine fixed!
