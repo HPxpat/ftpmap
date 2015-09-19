@@ -168,9 +168,13 @@ const char *testcmds[] = {
         "SITE CHMOD -R -1 ." ,
         "SITE CHMOD -R 0 ." ,
         "SITE CHMOD -R 42 ." ,        
-        "HELP RETR" ,
-	"ESTP" ,
-	"ESTA" ,
+        "HELP SITE",
+				"HELP RETR" ,
+				"ESTP",
+				"ESTA",
+				"AUTH", /* RFC 2228 */
+				"ADAT", /* RFC 2228 */
+				"MIC", /* RFC 2228 */
 };
 
 static const char *long_output_cmds[] = {"HELP"};
