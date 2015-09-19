@@ -1,20 +1,17 @@
 FTP-Map
 ==========
 
-DISCLAIMER
-==========
-
-Usage of FTPMap for attacking targets without prior mutual consent is illegal.
-FTPMap developer (@Hypsurus) not responsible to any damage caused by FTPMap.
-
-
 Developer notes
 ================
 
-* FTPMap 0.14 
+* FTPMap 0.15 (The last version before 1.0alpha)
 
-1. Added brute force function for user root 
-2. Added colors
+1. Fingerprint engine bug fixed.
+2. ftpmap->fid removed (using gfid)
+3. Code cleanup.
+4. new tool proftpd_versions.py
+5. FTP error code bug fixed.
+6. -o removed, using global log file ftpmap_scan.log.
 
 #### For release 1.0 we need TODO:
 
@@ -35,7 +32,7 @@ Developer notes
 #### FTP-Map is open source and free, Please help me with:
 
 * Send bug reports.
-* Code!, we need more featuers.
+* Code! we need more featuers.
 * More fingerprints!
 
 About
@@ -46,6 +43,14 @@ they are running. It uses program-specific fingerprints to discover the name
 of the software even when banners have been changed or removed, or when some
 features have been disabled. FTP-Map will try to detect exploits by the  
 FTP software/version.
+
+Please send the fingerprint and the name of the software to hypsurus@mail.ru.
+Another indication that can be displayed if login was successful is the FTP
+PORT sequence prediction. If the difficulty is too low, it means that anyone
+can steal your files and change their content, even without knowing your
+password or sniffing your network.
+There are very few known fingerprints yet, but submissions are welcome.
+
 
 ![FtpMap014](ftpmap014.png)
 
@@ -77,12 +82,6 @@ Usage
 
 * use --help for the full options.
 
-Please send the fingerprint and the name of the software to hypsurus@mail.ru.
-Another indication that can be displayed if login was successful is the FTP
-PORT sequence prediction. If the difficulty is too low, it means that anyone
-can steal your files and change their content, even without knowing your
-password or sniffing your network.
-There are very few known fingerprints yet, but submissions are welcome.
 
 Obfuscating FTP servers
 =======================
@@ -103,6 +102,13 @@ servers.
 
 If you want to sleep quietly, the best thing to do is to keep your systems
 up to date : subscribe to mailing lists and apply vendor patches.
+
+
+DISCLAIMER
+==========
+
+Usage of FTPMap for attacking targets without prior mutual consent is illegal.
+FTPMap developer (@Hypsurus) not responsible to any damage caused by FTPMap.
 
 Get FTP-Map
 =============
