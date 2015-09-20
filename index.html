@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="UTF-8">
+    <title>Ftpmap by Hypsurus</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="stylesheets/normalize.css" media="screen">
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen">
+  </head>
+  <body>
+    <section class="page-header">
+      <h1 class="project-name">Ftpmap</h1>
+      <h2 class="project-tagline">FTP scanner, and take-over tool in C</h2>
+      <a href="https://github.com/Hypsurus/ftpmap" class="btn">View on GitHub</a>
+      <a href="https://github.com/Hypsurus/ftpmap/zipball/master" class="btn">Download .zip</a>
+      <a href="https://github.com/Hypsurus/ftpmap/tarball/master" class="btn">Download .tar.gz</a>
+    </section>
+
+    <section class="main-content">
+      <h1>
+<a id="ftp-map" class="anchor" href="#ftp-map" aria-hidden="true"><span class="octicon octicon-link"></span></a>FTP-Map</h1>
+
+<h1>
+<a id="developer-notes" class="anchor" href="#developer-notes" aria-hidden="true"><span class="octicon octicon-link"></span></a>Developer notes</h1>
+
+<ul>
+<li><p>FTPMap 0.15 (The last version before 1.0alpha)</p></li>
+</ul>
+
+<ol>
+<li>Fingerprint engine bug fixed.</li>
+<li>ftpmap-&gt;fid removed (using gfid)</li>
+<li>Code cleanup.</li>
+<li>new tool proftpd_versions.py</li>
+<li>FTP error code bug fixed.</li>
+<li>-o removed, using global log file ftpmap_scan.log.</li>
+</ol>
+
+<h4>
+<a id="for-release-10-we-need-todo" class="anchor" href="#for-release-10-we-need-todo" aria-hidden="true"><span class="octicon octicon-link"></span></a>For release 1.0 we need TODO:</h4>
+
+<ul>
+<li>Testing if FTPMap is stable .</li>
+<li>Adding more fingerprints.</li>
+<li>security check. (overflows, etc..)</li>
+</ul>
+
+<h4>
+<a id="ftpmap-should-work-on--as-far-i-know" class="anchor" href="#ftpmap-should-work-on--as-far-i-know" aria-hidden="true"><span class="octicon octicon-link"></span></a>FTPMap should work on ( As far I know):</h4>
+
+<ul>
+<li>linux (Arch, Debian, Fedora etc..) 100%</li>
+<li>ARM (RaspberryPi, Android etc..). 100%</li>
+<li>BSD (FreeBSD, etc..) 100%</li>
+<li>Mac? (I didn't test)</li>
+<li>Windows (Cygwin?)</li>
+</ul>
+
+<h6>
+<a id="for-any-questionhelp-you-can-reach-me-in-hypsurus" class="anchor" href="#for-any-questionhelp-you-can-reach-me-in-hypsurus" aria-hidden="true"><span class="octicon octicon-link"></span></a>For any question/help, you can reach me in: <a href="https://twitter.com/Hypsurus">@Hypsurus</a>
+</h6>
+
+<h4>
+<a id="ftp-map-is-open-source-and-free-please-help-me-with" class="anchor" href="#ftp-map-is-open-source-and-free-please-help-me-with" aria-hidden="true"><span class="octicon octicon-link"></span></a>FTP-Map is open source and free, Please help me with:</h4>
+
+<ul>
+<li>Send bug reports.</li>
+<li>Code! we need more featuers.</li>
+<li>More fingerprints!</li>
+</ul>
+
+<h1>
+<a id="about" class="anchor" href="#about" aria-hidden="true"><span class="octicon octicon-link"></span></a>About</h1>
+
+<p>Ftpmap scans remote FTP servers to indentify what software and what versions
+they are running. It uses program-specific fingerprints to discover the name
+of the software even when banners have been changed or removed, or when some
+features have been disabled. FTP-Map will try to detect exploits by the<br>
+FTP software/version.</p>
+
+<p>Please send the fingerprint and the name of the software to <a href="mailto:hypsurus@mail.ru">hypsurus@mail.ru</a>.
+Another indication that can be displayed if login was successful is the FTP
+PORT sequence prediction. If the difficulty is too low, it means that anyone
+can steal your files and change their content, even without knowing your
+password or sniffing your network.
+There are very few known fingerprints yet, but submissions are welcome.</p>
+
+<p><img src="https://raw.githubusercontent.com/Hypsurus/ftpmap/master/ftpmap014.png" alt="FtpMap014"></p>
+
+<h1>
+<a id="build" class="anchor" href="#build" aria-hidden="true"><span class="octicon octicon-link"></span></a>Build</h1>
+
+<pre><code>./configure
+make
+sudo make install 
+</code></pre>
+
+<h1>
+<a id="usage" class="anchor" href="#usage" aria-hidden="true"><span class="octicon octicon-link"></span></a>Usage</h1>
+
+<ul>
+<li>
+<p>Scan server:</p>
+
+<blockquote>
+<p>ftpmap -Sgs localhost</p>
+</blockquote>
+</li>
+<li>
+<p>Scan multiple FTP servers:</p>
+
+<blockquote>
+<p>ftpmap -gL list.txt</p>
+</blockquote>
+</li>
+<li>
+<p>Upload a file.</p>
+
+<blockquote>
+<p>ftpmap -s localhost --user root --password root -U 'topsecretfile.txt'</p>
+</blockquote>
+</li>
+<li>
+<p>Download a file:</p>
+
+<blockquote>
+<p>ftpmap -s localhost --user root --password root -d '/topsecretfile.txt'</p>
+</blockquote>
+</li>
+<li>
+<p>list files:</p>
+
+<blockquote>
+<p>ftpmap -s localhost --user anonymous -p null -l '/'</p>
+</blockquote>
+</li>
+<li><p>use --help for the full options.</p></li>
+</ul>
+
+<h1>
+<a id="obfuscating-ftp-servers" class="anchor" href="#obfuscating-ftp-servers" aria-hidden="true"><span class="octicon octicon-link"></span></a>Obfuscating FTP servers</h1>
+
+<p>This software was written as a proof of concept that security through
+obscurity doesn't work. Many system administrators think that hidding or
+changing banners and messages in their server software can improve security.</p>
+
+<p>Don't trust this. Script kiddies are just ignoring banners. If they read
+that "XYZ FTP software has a vulnerability", they will try the exploit on
+all FTP servers they will find, whatever software they are running. The same
+thing goes for free and commercial vulnerability scanners. They are probing
+exploits to find potential holes, and they just discard banners and messages.
+On the other hand, removing software name and version is confusing for the
+system administrator, who has no way to quickly check what's installed on his
+servers.</p>
+
+<p>If you want to sleep quietly, the best thing to do is to keep your systems
+up to date : subscribe to mailing lists and apply vendor patches.</p>
+
+<h1>
+<a id="disclaimer" class="anchor" href="#disclaimer" aria-hidden="true"><span class="octicon octicon-link"></span></a>DISCLAIMER</h1>
+
+<p>Usage of FTPMap for attacking targets without prior mutual consent is illegal.
+FTPMap developer (<a href="https://github.com/Hypsurus" class="user-mention">@Hypsurus</a>) not responsible to any damage caused by FTPMap.</p>
+
+<h1>
+<a id="get-ftp-map" class="anchor" href="#get-ftp-map" aria-hidden="true"><span class="octicon octicon-link"></span></a>Get FTP-Map</h1>
+
+<pre><code>            git clone git://github.com/Hypsurus/ftpmap 
+</code></pre>
+
+<h1>
+<a id="the-end" class="anchor" href="#the-end" aria-hidden="true"><span class="octicon octicon-link"></span></a>The END</h1>
+
+<pre><code>Copyright 2015 (C) FTP-Map project developers.
+License GPLv3+: GNU GPL version 3 or later &lt;http://gnu.org/licenses/gpl.html&gt;.
+</code></pre>
+
+      <footer class="site-footer">
+        <span class="site-footer-owner"><a href="https://github.com/Hypsurus/ftpmap">Ftpmap</a> is maintained by <a href="https://github.com/Hypsurus">Hypsurus</a>.</span>
+
+        <span class="site-footer-credits">This page was generated by <a href="https://pages.github.com">GitHub Pages</a> using the <a href="https://github.com/jasonlong/cayman-theme">Cayman theme</a> by <a href="https://twitter.com/jasonlong">Jason Long</a>.</span>
+      </footer>
+
+    </section>
+
+  
+  </body>
+</html>
