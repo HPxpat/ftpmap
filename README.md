@@ -52,7 +52,7 @@ password or sniffing your network.
 There are very few known fingerprints yet, but submissions are welcome.
 
 
-![FtpMap014](ftpmap014.png)
+![FtpMap014](https://raw.githubusercontent.com/Hypsurus/ftpmap/master/ftpmap014.png)
 
 Build
 =====
