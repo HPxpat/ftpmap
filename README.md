@@ -4,14 +4,8 @@ FTP-Map
 Developer notes
 ================
 
-* FTPMap 0.15 (The last version before 1.0alpha)
 
-1. Fingerprint engine bug fixed.
-2. ftpmap->fid removed (using gfid)
-3. Code cleanup.
-4. new tool proftpd_versions.py
-5. FTP error code bug fixed.
-6. -o removed, using global log file ftpmap_scan.log.
+##### [Skod](https://github.com/Hypsurus/skod) will replace FTP-map
 
 #### For release 1.0 we need TODO:
 
